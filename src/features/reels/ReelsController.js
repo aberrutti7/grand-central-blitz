@@ -134,16 +134,86 @@ export default class ReelsController {
     }
 
     stopSpin(){
-        this.reels.forEach(reelView => reelView.stopSpin());
+        this.reels.forEach(reelView => {
+            reelView.symbols.forEach((symbolView) => {
+                symbolView?.stopSpin();
+            });
+        });
     }
 
-    addNewSymbols(strip){
-        for (let i = 0; i < this.reels.length; i++) {
-            let reelView = this.reels[i];
-            reelView.addNewSymbols({
-                strip: strip[i],
+    resetQuickStop(){
+        this.reels.forEach(reelView => {
+            reelView.symbols.forEach((symbolView) => {
+                if (symbolView) symbolView.isQuickStop = false
             });
+        });
+    }
+
+    async addNewSymbols({strip}){
+         const addNewSymbolsPromise = this.reels.map(async (reelView, i) => {
+            return reelView.addNewSymbolsAboveTheScreen({ strip: strip[i] })
+        })
+        await Promise.all(addNewSymbolsPromise)
+    }
+
+    async showNewSymbols({steps}){
+        const fallFromAbovePromises = []
+        for (let i = 0; i < this.reels.length; i++) {
+            const reelView = this.reels[i];
+            const delay = 50 * i
+            fallFromAbovePromises.push(reelView.fallSymbolsFromAboveScreen(delay, steps))
         }
+                
+        await Promise.all(fallFromAbovePromises);
+    }
+
+    async destroyClusterSymbols(){
+        const destroyPromises = []
+        for (let cluster of this.deleteCascadeSymbols ?? []) {
+            const reel = this.reels[cluster.reel]
+            destroyPromises.push(reel.animateDestroySymbol(cluster.row));
+        }
+        await Promise.all(destroyPromises)
+    }
+
+    async applyGravityToSymbols(){
+        const fallPromises = this.reels.map(reel => reel.animateFallSymbols());
+        await Promise.all(fallPromises)
+    }
+
+    async dropCascadeSymbols({strip}){
+        const cascadePromises = this.reels.map((reel, i) => 
+            reel.addCascadeSymbols(strip[i])
+        );
+        await Promise.all(cascadePromises);
+    }
+
+    async showLines({prizes = []}) {
+        this.deleteCascadeSymbols = [];
+
+        if (!prizes?.length) return;
+
+        this.scene.sound.play('won', {volume: 0.04});
+
+        const symbolRefs = prizes.flatMap(prize => prize.symbols ?? prize);
+
+        const animationPromises = symbolRefs.map(sym => {
+            this.deleteCascadeSymbols.push({ reel: sym.reel, row: sym.position, reelset: 'main' });
+            return this.reels[sym.reel].showWinnerSymbols(sym.position);
+        });
+
+        await Promise.all(animationPromises);
+    }
+
+    async makeSymbolsFallFromScreen(){
+        const symbolsFallFromScreen = this.reels.map(async (reelView, i) => {
+            let delay = 50 * i;
+            const response = reelView.makeSymbolsFallFromScreen({
+                delay
+            });
+            return response
+        });
+        await Promise.all(symbolsFallFromScreen)
     }
 
     /**
@@ -266,6 +336,7 @@ export default class ReelsController {
             const reelView = this.reels[reel];
             for (let row = 0; row < reelView.symbols.length; row++) {
                 const symbolView = reelView.symbols[row]
+                if (!symbolView) continue
                 const id = symbolView.getId()
                 if (symbolsID.has(id) && !this.stickies[reel][row]){
                     const x = reelView.container.x
@@ -290,7 +361,7 @@ export default class ReelsController {
 
         const promises = this.reels.flatMap(reel => {
             reel.clearTweens();
-            return reel.symbols.map(sym => sym.resetVisual());
+            return reel.symbols.map(sym => sym?.resetVisual());
         });
 
         await Promise.all(promises);
@@ -315,7 +386,7 @@ export default class ReelsController {
 
         this.reels.forEach(reel => {
             reel.symbols.forEach(sym => {
-                if (!winning.has(sym)) {
+                if (sym && !winning.has(sym)) {
                     sym.dim();
                 }
             });

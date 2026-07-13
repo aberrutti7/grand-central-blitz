@@ -105,10 +105,10 @@ export const config = {
     },
     api: {
         baseUrl: 'https://api.playcasinoslots.xyz/api',
-        username: 'landing',
-        password: 'landing',
-        secretId: 'bb2dd6dd-ffc1-4b96-a793-6e3536d98114',
-        gameName: 'GatesOfPoseidon',
+        username: 'JAK',
+        password: 'JAK',
+        secretId: '582dfe59-94ed-4c1a-8e7f-24d875560c98',
+        gameName: '3ChestsOfRiches',
     }
 }
 

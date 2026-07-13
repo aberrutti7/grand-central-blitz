@@ -168,6 +168,8 @@ export default class GameController extends Phaser.Scene {
         })
         this.controls_bar.on('setTurbo', (isTurbo) => {
             this.state.setTurbo(isTurbo);
+            const gameSpeed = this.state.getTurbo() ? 2 : 1
+            this.tweens.timeScale = gameSpeed;
         });
 
         this.controls_bar.on('bonusBuy', (bonusBuyInfo)=>{
@@ -229,7 +231,7 @@ export default class GameController extends Phaser.Scene {
         try {
             this._updateAutoPlay();
             await this._prepareForSpin(result);
-            await this._animateReels();
+            this.controls_bar.disableStopButton();
             await this._resolveResult();
         } catch (error) {
             console.error('Spin error:', error);
@@ -259,7 +261,6 @@ export default class GameController extends Phaser.Scene {
     }
 
     async _prepareForSpin(result) {
-        await this.resetWinAnimations();
         this.controls_bar.enableStopButton();
 
         this.state.resetValues();
@@ -272,15 +273,35 @@ export default class GameController extends Phaser.Scene {
             this.updateFSLeft(this.lastResult.remainingFreeGames);
         }
 
-
-        this.reelsController.addNewSymbols(this.lastResult.reelsSlices);
+        await this.handleSpin()
     }
 
-    async _animateReels() {
-        const speedMultiplier = this.state.getTurbo() ? 5 : 1;
-        await this.reelsController.animateSpin(this.lastResult.reelsSlices, 50, speedMultiplier);
-        await this.applyModifiers();
-        this.controls_bar.disableStopButton();
+    async handleSpin(){
+        const spinType = this.lastResult.spinType;
+        
+        switch(spinType){
+            case "cascade":
+                await this.handleCascade()
+                break;
+            case "freespins":
+            default:
+                await this.handleBasespin()
+                break;
+        }
+    }
+
+    async handleBasespin(){
+        await this.reelsController.makeSymbolsFallFromScreen()
+        await this.reelsController.addNewSymbols({strip: this.lastResult.reelsSlices})
+        await this.reelsController.showNewSymbols({ steps: this.lastResult.reelsSlices.length * 6 });
+    }
+
+    async handleCascade(){
+        await this.reelsController.applyGravityToSymbols();
+
+        await this.reelsController.dropCascadeSymbols({ strip: this.lastResult.reelsSlices });
+        
+        this.reelsController.resetQuickStop()
     }
 
     async applyModifiers(){
@@ -291,6 +312,7 @@ export default class GameController extends Phaser.Scene {
 
     async _resolveResult() {
         await this.playWinAnimations();
+        await this.reelsController.destroyClusterSymbols();
         await this.handleSpinEnd();
     }
 
@@ -456,16 +478,11 @@ export default class GameController extends Phaser.Scene {
 
     async playWinAnimations(){
         await this.turboDelay(500)
+        await this._handleCascadeAnimation()
+    }
 
-        const slotType = this.model.getSlotType()
-        
-        if (slotType == SLOT_TYPES.WAYS){
-            this._handleWaysAnimation(this.model.getWaysWinningAnimation())
-        }
-
-        if (slotType == SLOT_TYPES.LINES){
-            this._handleLinesAnimation(this.model.getLinesWinningAnimation())
-        }
+    async _handleCascadeAnimation(){
+        await this.reelsController.showLines({ prizes: this.lastResult.wonPrizes });
     }
 
     chargeBalance(isBonusBuy) {

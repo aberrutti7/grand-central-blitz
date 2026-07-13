@@ -41,8 +41,9 @@ export default class LoadingScreen extends Phaser.Scene {
 
         if (this.gameConfig.loadingScreen.show) {
             this._buildUI();
-            this._startLogin();
         }
+
+        this._startLogin();
 
         this.loadCSS()
         this.loadPlays()
@@ -235,7 +236,7 @@ export default class LoadingScreen extends Phaser.Scene {
     }
 
     async _checkReady() {
-        if (!this._assetsLoaded || (!this._loginDone && this.gameConfig.loadingScreen.show)) return;
+        if (!this._assetsLoaded || !this._loginDone) return;
 
         await document.fonts.ready;
 

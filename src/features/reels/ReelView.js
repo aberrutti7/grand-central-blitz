@@ -1,7 +1,7 @@
 import { Model, ResponsiveManager } from "../../core";
 import { SymbolView } from "../symbols";
 import { drawBounds } from "../../utils/drawBounds";
-import { SYMBOLS_TO_GROW, SYMBOLS_TO_SHAKE } from "../../constants/IDs";
+import { SYMBOLS_TO_GROW, SYMBOLS_TO_SHAKE, WILD_ID } from "../../constants/IDs";
 
 export default class ReelView extends Phaser.Events.EventEmitter {
 
@@ -58,17 +58,19 @@ export default class ReelView extends Phaser.Events.EventEmitter {
 
         for (let i = 0; i < this.initialHeight; i++) {
             const id = this.strip[i];
-            const symbolView = this._createSymbol({ id, index: i });
+            const symbolView = this._createSymbol({ id, index: i, initialHeight: this.initialHeight });
             this.symbols.push(symbolView);
         }
     }
 
-    _createSymbol({ id, index }) {
+    _createSymbol({ id, index, initialHeight }) {
+        const symbolsPerReel = initialHeight ?? this.initialHeight
         const symbolView = new SymbolView({
             scene: this.scene,
             model: this.model,
             id,
-            index
+            index,
+            symbolsPerReel
         });
 
         const reelsConfig = this._getResponsiveConfig();
@@ -84,22 +86,135 @@ export default class ReelView extends Phaser.Events.EventEmitter {
     }
 
     stopSpin() {
-        if (this.spinTween) {
-            this.spinTween.stop();
-            this.spinTween = null;
+        this.symbols.forEach((symbolView)=>{
+            symbolView?.stopSpin()
+        })
+    }
+
+    async makeSymbolsFallFromScreen({delay}) {
+        const fallPromises = this.symbols.map((symbol, i) => {
+            if (!symbol) return Promise.resolve();
+            const response = symbol.fallFromScreen(delay);
+            return response     
+        });
+        await Promise.all(fallPromises);
+    }
+
+    async fallSymbolsFromAboveScreen(delay, steps){
+        const animPromises = this.symbols.map((symbol) => {
+            return symbol?.fallFromAbove(delay, steps, false)
+        });
+        await Promise.all(animPromises)
+    }
+
+    async animateDestroySymbol(row, shouldEmitParticle) {
+        const symbol = this.symbols[row]
+        if (symbol) {
+            await symbol.animateDestroy()
+        }
+        this.symbols[row] = null
+    }
+
+    async animateFallSymbols() {
+        const promises = []
+        for (let i = this.symbols.length - 1; i >= 0; i--) {
+            let symbol = this.symbols[i];
+            if (symbol == null) {
+                symbol = this.getNextFallingSymbol(i - 1);
+                if (symbol != null) {
+                    this.symbols[i] = symbol;
+                    promises.push(symbol.fallCascade(i))
+                }
+            }
+        }
+        return Promise.all(promises)
+    }
+
+    async addCascadeSymbols(strip) { 
+        const newSymbols = this._createMissingSymbols(strip);
+        this._recalculateIndexes();
+        await this._animateNewSymbols(newSymbols);
+    }
+
+    _createMissingSymbols(strip) {
+        const newSymbols = [];
+        let steps = 0;
+
+        for (let i = this.symbols.length - 1; i >= 0; i--) {
+            if (this.symbols[i] == null) {
+                steps++;
+                const symbol = this._buildSymbol(strip[i], -steps);
+                symbol.container.y = -(steps - i) * this.model.getSymbolSize() - 150;
+                this.container.add([symbol.container]);
+                this.symbols[i] = symbol;
+                newSymbols.push({ symbol, delay: i * 50, steps: steps - i });
+            } else {
+                this.symbols[i].index = i;
+                this.symbols[i].forcePosY();
+            }
         }
 
-        if (this._finalY !== null && this._finalY !== undefined) {
-            this.container.y = this._finalY;
-            this._repositionSymbols();
-            this._finalY = null;
+        return newSymbols;
+    }
+
+    _buildSymbol(id, index) {
+        if (id == -1) id = WILD_ID;
+
+        return new SymbolView({
+            scene: this.scene,
+            model: this.model,
+            symbolsPerReel: this.initialHeight,
+            id,
+            index,
+        });
+    }
+
+    _recalculateIndexes() {
+        this.symbols.forEach((symbol, i) => {
+            if (symbol != null) symbol.index = i;
+        });
+    }
+
+    async _animateNewSymbols(newSymbols) {
+        const promises = newSymbols
+            .filter(({ symbol }) => symbol != null)
+            .map(({ symbol, delay, steps }) => symbol.fallFromAbove(delay, steps, true));
+
+        await Promise.all(promises);
+    }
+
+    getNextFallingSymbol(startingIndex) {
+        for (let i = startingIndex; i >= 0; i--) {
+            let symbol = this.symbols[i];
+            if (symbol != null) {
+                this.symbols[i] = null;
+                return symbol;
+            }
         }
 
-        if (this._spinResolve) {
-            this._spinResolve();
-            this._spinResolve = null;
+        return null;
+    }
+
+    /**
+     * @param { number[][] } strip 
+     * Agregar los símbolos del strip arriba de 
+     * la pantalla sin dummies.
+     */
+    async addNewSymbolsAboveTheScreen({strip}) {
+        for (let row = 0; row < this.symbols.length; row++) {
+            const symbolView = this.symbols[row];
+            const newIndex = (-this.symbols.length) + row
+            symbolView?.updateYPos(newIndex)
+            symbolView?.changeView(strip[row])
         }
     }
+
+    async showWinnerSymbols(symbolPosition) {
+        const winnerSymbol = this.symbols[symbolPosition];
+        if (!winnerSymbol) return;
+        await winnerSymbol.makeWinner();
+    }
+
 
     async addNewSymbols({ strip }) {
         let nextIndex = -1;
@@ -215,7 +330,7 @@ export default class ReelView extends Phaser.Events.EventEmitter {
     
     clearSymbols(){
         for (let i=0; i< this.symbols.length; i++){
-            this.symbols[i].destroy();
+            this.symbols[i]?.destroy();
         }
     }
 }

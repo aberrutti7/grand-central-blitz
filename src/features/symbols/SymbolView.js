@@ -3,9 +3,11 @@ import { Model } from "../../core";
 import { DebugPanel } from "../../utils";
 import { drawBounds } from "../../utils/drawBounds";
 
+const SPEED_TIME_SCALE = 5
+
 export default class SymbolView extends Phaser.Events.EventEmitter {
 
-    constructor({scene, model, index, id, enterAnim = false, horizonalPos = false}) {
+    constructor({scene, model, index, id, enterAnim = false, horizonalPos = false, symbolsPerReel}) {
         super();
 
         /** @type {Phaser.Scene} */
@@ -14,9 +16,18 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
         this.model = model;
         this.index = index;
         this.id = id;
+        this.symbolsPerReel = symbolsPerReel;
         this.container = this.scene.add.container(0,0);
         this._createWinBorder()
         this.createView();
+    }
+
+    updateYPos(index){
+        this.container.y = this.model.getSymbolSize() * index
+    }
+
+    forcePosY() {
+        this.container.y = this.model.getSymbolSize() * this.index;
     }
 
     // -------------------
@@ -126,6 +137,183 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
             repeat: 1
         });
     }
+
+     /**
+     * @param {Number} delay 
+     * Anima los simbolos para que caigan de la pantalla
+     */
+    fallFromScreen(delay) {
+        const currentY = this.container.y;
+        const separationFactor = (this.index / this.symbolsPerReel) * 50;
+        const targetY = currentY + (this.model.getSymbolSize() * (this.symbolsPerReel + 1)) + (this.index * separationFactor);
+
+        const timeScale = this.isQuickStop ? SPEED_TIME_SCALE : 1;
+
+        return new Promise((resolve) => {
+            this.fallingSymbolTween = this.scene.tweens.add({
+                targets: this.container,
+                persist: true,
+                y: targetY,
+                duration: 450,
+                ease: 'Cubic.In',
+                delay: delay,
+                onComplete: () => {
+                    this.fallingSymbolTween = null
+                    resolve();
+                }
+            });
+            this.fallingSymbolTween.setTimeScale(timeScale)
+        });
+    }
+
+    fallCascade(index) {
+        this.index = index;
+        
+        const currentY = this.container.y;
+        const targetY = this.model.getSymbolSize() * this.index;
+        const distance = Math.abs(targetY - currentY);
+        
+        const timeScale = this.isQuickStop ? SPEED_TIME_SCALE : 1;
+
+        const duration = 300 + (distance / this.model.getSymbolSize()) * 80;
+        
+        return new Promise((resolve)=>{
+            this.fallCascadeTween = this.scene.tweens.add({ 
+                targets: this.container,
+                y: targetY + 15,
+                ease: 'Cubic.In',
+                duration: duration * 0.85,
+                onComplete: () => {
+                    this.scene.tweens.add({
+                        targets: this.container,
+                        y: targetY,
+                        ease: 'Back.Out',
+                        duration: duration * 0.55,
+                        onComplete: () => {
+                            this.fallCascadeTween = null
+                            this.isQuickStop = false
+                            resolve()
+                        }
+                    });
+                }
+            });
+            this.fallCascadeTween.setTimeScale(timeScale)                  
+        })
+    }
+
+    animateDestroy() {
+        return new Promise((resolve) => {
+            let resolved = false;
+            const safeResolve = () => {
+                if (resolved) return;
+                resolved = true;
+                this.destroy();
+                resolve();
+            };
+
+            this.tween = this.scene.tweens.add({
+                targets: this.view,
+                alpha: 0,
+                scaleX: 1.3,
+                scaleY: 1.3,
+                ease: 'Expo.Out',
+                duration: 300,
+                onComplete: safeResolve
+            });
+
+            this.tween.once('stop', safeResolve);
+            this.tween.once('destroy', safeResolve);
+
+            this.scene.time.delayedCall(1000, safeResolve);
+        });
+    }
+    
+    makeWinner() {
+        const border = new Phaser.GameObjects.Sprite(this.scene, 0, 0, 'symbols', 'border');
+        border.x = this.view.displayWidth * 0.5;
+        border.y = this.view.displayHeight * 0.5;
+        this.container.add(border);
+
+        return new Promise(resolve => {
+            this.scene.tweens.add({
+                targets: border,
+                alpha: { from: 0, to: 1 },
+                duration: 250,
+                ease: 'Sine.InOut',
+                repeat: 3,
+                yoyo: true,
+                onComplete: () => {
+                    resolve();
+                    border.destroy();
+                }
+            });
+        });
+    }
+
+    stopSpin(){
+        this.isQuickStop = true
+        if (this.fallTween) {
+            this.fallTween.setTimeScale(SPEED_TIME_SCALE);
+        }
+        if (this.fallCascadeTween) {
+            this.fallCascadeTween.setTimeScale(SPEED_TIME_SCALE)
+        }
+        if (this.fallingSymbolTween) {
+            this.fallingSymbolTween.setTimeScale(SPEED_TIME_SCALE)
+        }
+    }
+
+    fallFromAbove(delay, steps, cascade){
+        return new Promise(resolve => {
+            const shakeSymbols = new Set(SYMBOLS_TO_SHAKE);
+            const growSymbols = new Set(SYMBOLS_TO_GROW);
+            
+            let spinCount = steps / this.symbolsPerReel;
+            const currentY = this.container.y;
+            let targetY = this.index * this.model.getSymbolSize();
+            
+            const baseDuration = 500 + (spinCount * this.index);
+            const overshoot = 15;
+
+            const timeScale = this.isQuickStop ? SPEED_TIME_SCALE : 1;
+                        
+            if (shakeSymbols.has(this.id)) {
+                this.shakeAnimation({
+                    delay: baseDuration,
+                    strength: 10
+                });
+            }
+
+            if (growSymbols.has(this.id)) {
+                this.growAnimation(baseDuration, 0.20);
+            }
+
+            this.fallTween = this.scene.tweens.chain({
+                targets: this.container,
+                tweens: [
+                    {
+                        y: targetY + overshoot,
+                        duration: baseDuration * 0.85,
+                        ease: 'Cubic.In'
+                    },
+                    {
+                        y: targetY,
+                        duration: baseDuration * 0.55,
+                        ease: 'Back.Out',
+                        easeParams: [0.5]
+                    }
+                ],
+                delay: delay,
+                onComplete: () => {
+                    this.fallTween = null
+                    this.isQuickStop = false
+                    resolve()
+                }
+            });  
+
+            this.fallTween.setTimeScale(timeScale)
+        })      
+    }
     
     playPulse(duration = 300) {
         this.view.setAlpha(1);
@@ -228,6 +416,7 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
     // -------------------
 
     destroy() {
+        this.resetVisual()
         if (this.tween) {
             this.tween.stop();
             this.tween = null

@@ -217,7 +217,7 @@ export default class Model extends Phaser.Events.EventEmitter {
         } else if (result.respin != null) {
             result = { type: 'respin', data: result.respin };
         }else {
-            result = { type: 'basespin', data: result.basespin };
+            result = { type: 'basespin', data: result.basegame };
         }
 
         console.log(result);
