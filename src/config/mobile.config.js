@@ -41,9 +41,10 @@ export default {
             y: 38
         },
         background: {
-            x: 1080,
+            x: -1180,
             y: 0,
-            angle: 90,
+            angle: 0,
+            scale: 2.5,
         },
         fsLeft: {
             x: 540,

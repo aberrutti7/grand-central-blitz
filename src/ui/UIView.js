@@ -301,7 +301,7 @@ export default class UIView extends Phaser.Events.EventEmitter {
 
     _createBackgrounds(){
         if (config.background?.key) {
-            this.background = this.scene.add.sprite(0,0,config.background.key).setOrigin(0).applyResponsive('ui.background')
+            this.background = this.scene.add.sprite(0,0,config.background.key).setOrigin(0).setScale(1.4).applyResponsive('ui.background')
         }
     }
 
