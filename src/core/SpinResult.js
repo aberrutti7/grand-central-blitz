@@ -2,6 +2,12 @@ export default class SpinResult {
 
   constructor(rawSpin) {
     this.reelsSlices = rawSpin.data.reelsSlices || []
+    this.reelHeights = [
+      this.reel1Height = rawSpin.data.reel1Height || 3,
+      this.reel2Height = rawSpin.data.reel2Height || 3,
+      this.reel3Height = rawSpin.data.reel3Height || 3
+    ]
+    
     
     this.moneySymbolValues = rawSpin.data.money_symbols_values || []
 

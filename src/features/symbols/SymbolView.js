@@ -7,7 +7,7 @@ const SPEED_TIME_SCALE = 5
 
 export default class SymbolView extends Phaser.Events.EventEmitter {
 
-    constructor({scene, model, index, id, enterAnim = false, horizonalPos = false, symbolsPerReel}) {
+    constructor({scene, model, index, id, enterAnim = false, horizonalPos = false, symbolsPerReel, reelHeight = 3, rowHeight}) {
         super();
 
         /** @type {Phaser.Scene} */
@@ -18,16 +18,18 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
         this.id = id;
         this.symbolsPerReel = symbolsPerReel;
         this.container = this.scene.add.container(0,0);
+        this.reelHeight = reelHeight
+        this.rowHeight = rowHeight ?? model.getSymbolSize()
         this._createWinBorder()
         this.createView();
     }
 
     updateYPos(index){
-        this.container.y = this.model.getSymbolSize() * index
+        this.container.y = this.rowHeight * index
     }
 
     forcePosY() {
-        this.container.y = this.model.getSymbolSize() * this.index;
+        this.container.y = this.rowHeight * this.index;
     }
 
     // -------------------
@@ -56,9 +58,12 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
     // -------------------
 
     createView() {
-        this.initialScale = 0.6
-        let symName = 'sym_' + this.id;
+        
+        let symName = `sym_${this.id}_h${this.reelHeight}`;        
         this.view = this.scene.add.sprite(0, 0, 'symbols', symName);
+
+        this.initialScale = this.model.getSymbolSize() / this.view.width;
+
         this.view.scale = this.initialScale
         this.view.x += this.view.displayWidth * 0.5;
         this.view.y += this.view.displayHeight * 0.5;
@@ -106,7 +111,7 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
     }
 
     changeView(newId){
-        this.view.setFrame("sym_"+newId);
+        this.view.setFrame(`sym_${newId}_h${this.reelHeight}`);
         this.debug?.setText(newId)
         this.id = newId;
     }
@@ -145,7 +150,7 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
     fallFromScreen(delay) {
         const currentY = this.container.y;
         const separationFactor = (this.index / this.symbolsPerReel) * 50;
-        const targetY = currentY + (this.model.getSymbolSize() * (this.symbolsPerReel + 1)) + (this.index * separationFactor);
+        const targetY = currentY + (this.rowHeight * (this.symbolsPerReel + 1)) + (this.index * separationFactor);
 
         const timeScale = this.isQuickStop ? SPEED_TIME_SCALE : 1;
 
@@ -170,12 +175,12 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
         this.index = index;
         
         const currentY = this.container.y;
-        const targetY = this.model.getSymbolSize() * this.index;
+        const targetY = this.rowHeight * this.index;
         const distance = Math.abs(targetY - currentY);
         
         const timeScale = this.isQuickStop ? SPEED_TIME_SCALE : 1;
 
-        const duration = 300 + (distance / this.model.getSymbolSize()) * 80;
+        const duration = 300 + (distance / this.rowHeight) * 80;
         
         return new Promise((resolve)=>{
             this.fallCascadeTween = this.scene.tweens.add({ 
@@ -270,7 +275,7 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
             
             let spinCount = steps / this.symbolsPerReel;
             const currentY = this.container.y;
-            let targetY = this.index * this.model.getSymbolSize();
+            let targetY = this.index * this.rowHeight;
             
             const baseDuration = 500 + (spinCount * this.index);
             const overshoot = 15;

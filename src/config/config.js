@@ -76,9 +76,9 @@ export const config = {
     jackpots: [],
     grid: [3,3,3],
     reels: { 
-        r0: [1,2,3,4],
-        r1: [5,6,7,8],
-        r2: [9,10,11,12],
+        r0: [1,2,4],
+        r1: [5,6,8],
+        r2: [9,10,11],
     },
     reelsY: [0,0,0,0,0,0],
     reelsConfig: {

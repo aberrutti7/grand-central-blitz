@@ -149,11 +149,14 @@ export default class ReelsController {
         });
     }
 
-    async addNewSymbols({strip}){
-         const addNewSymbolsPromise = this.reels.map(async (reelView, i) => {
-            return reelView.addNewSymbolsAboveTheScreen({ strip: strip[i] })
-        })
-        await Promise.all(addNewSymbolsPromise)
+    async addNewSymbols({ strip, heights }) {
+        const promises = this.reels.map((reelView, i) =>
+            reelView.addNewSymbolsAboveTheScreen({
+                strip: strip[i],
+                height: heights[i]
+            })
+        );
+        await Promise.all(promises);
     }
 
     async showNewSymbols({steps}){

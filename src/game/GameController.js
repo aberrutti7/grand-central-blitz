@@ -292,7 +292,10 @@ export default class GameController extends Phaser.Scene {
 
     async handleBasespin(){
         await this.reelsController.makeSymbolsFallFromScreen()
-        await this.reelsController.addNewSymbols({strip: this.lastResult.reelsSlices})
+        await this.reelsController.addNewSymbols({
+            strip: this.lastResult.reelsSlices,
+            heights: this.lastResult.reelHeights
+        })
         await this.reelsController.showNewSymbols({ steps: this.lastResult.reelsSlices.length * 6 });
     }
 

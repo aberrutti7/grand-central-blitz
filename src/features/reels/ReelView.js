@@ -15,7 +15,7 @@ export default class ReelView extends Phaser.Events.EventEmitter {
         this.container = this.scene.add.container(0,0)
         this.index = index;
         this.initialHeight = initialHeight;
-        this.actualHeight = initialHeight;
+        this.setReelHeight(initialHeight);
         this.initialY = initialY;
         this.strip = strip;
         this.spinCount = spinCount; 
@@ -54,34 +54,27 @@ export default class ReelView extends Phaser.Events.EventEmitter {
     
     createInitialSymbols() {
         /** @type { SymbolView[] } */
-        this.symbols = [];        
+        this.symbols = [];
 
-        for (let i = 0; i < this.initialHeight; i++) {
-            const id = this.strip[i];
-            const symbolView = this._createSymbol({ id, index: i, initialHeight: this.initialHeight });
+        for (let i = 0; i < this.actualHeight; i++) {
+            const id = this.strip[i % this.strip.length];
+            const symbolView = this._createSymbol({ id, index: i });
             this.symbols.push(symbolView);
         }
     }
 
-    _createSymbol({ id, index, initialHeight }) {
-        const symbolsPerReel = initialHeight ?? this.initialHeight
+    _createSymbol({ id, index }) {
         const symbolView = new SymbolView({
             scene: this.scene,
             model: this.model,
             id,
             index,
-            symbolsPerReel
+            symbolsPerReel: this.actualHeight,
+            reelHeight: this.actualHeight,
+            rowHeight: this.rowHeight,
         });
-
-        const reelsConfig = this._getResponsiveConfig();
-        const gapBetweenSymbols = reelsConfig.gapBetweenRows ?? this.model.getGapBetweenRows();
-        const rowSpacing = this.model.getSymbolSize() + gapBetweenSymbols;
-        const y = index * rowSpacing
-
-        symbolView.setPosition(0, y);
-
+        symbolView.setPosition(0, index * this.rowHeight);
         this.container.add(symbolView.getContainer());
-
         return symbolView;
     }
 
@@ -144,7 +137,7 @@ export default class ReelView extends Phaser.Events.EventEmitter {
             if (this.symbols[i] == null) {
                 steps++;
                 const symbol = this._buildSymbol(strip[i], -steps);
-                symbol.container.y = -(steps - i) * this.model.getSymbolSize() - 150;
+                symbol.container.y = -(steps - i) * this.rowHeight - this.rowHeight;
                 this.container.add([symbol.container]);
                 this.symbols[i] = symbol;
                 newSymbols.push({ symbol, delay: i * 50, steps: steps - i });
@@ -163,7 +156,9 @@ export default class ReelView extends Phaser.Events.EventEmitter {
         return new SymbolView({
             scene: this.scene,
             model: this.model,
-            symbolsPerReel: this.initialHeight,
+            symbolsPerReel: this.actualHeight,
+            reelHeight: this.actualHeight,
+            rowHeight: this.rowHeight,
             id,
             index,
         });
@@ -200,12 +195,15 @@ export default class ReelView extends Phaser.Events.EventEmitter {
      * Agregar los símbolos del strip arriba de 
      * la pantalla sin dummies.
      */
-    async addNewSymbolsAboveTheScreen({strip}) {
-        for (let row = 0; row < this.symbols.length; row++) {
-            const symbolView = this.symbols[row];
-            const newIndex = (-this.symbols.length) + row
-            symbolView?.updateYPos(newIndex)
-            symbolView?.changeView(strip[row])
+    async addNewSymbolsAboveTheScreen({ strip, height }) {
+        this.clearSymbols();
+        this.setReelHeight(height);
+        this.symbols = [];
+
+        for (let row = 0; row < height; row++) {
+            const symbolView = this._createSymbol({ id: strip[row], index: row });
+            symbolView.container.y = (row - height) * this.rowHeight;
+            this.symbols.push(symbolView);
         }
     }
 
@@ -309,6 +307,15 @@ export default class ReelView extends Phaser.Events.EventEmitter {
         });
 
         this.container.y = 0;
+    }
+
+    _computeRowHeight(height) {
+        return (this.model.getSymbolSize() * 3) / height; 
+    }
+
+    setReelHeight(height) {
+        this.actualHeight = height;
+        this.rowHeight = this._computeRowHeight(height);
     }
 
     delay(ms) {
