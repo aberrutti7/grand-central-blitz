@@ -212,12 +212,12 @@ export default class Model extends Phaser.Events.EventEmitter {
         
         if (result.freespin != null) {
             result = { type: 'freespin', data: result.freespin };
-        } else if (result.cascade != null) {
-            result = { type: 'cascade', data: result.cascade };
+        } else if (result.cascades != null) {
+            result = { type: 'cascade', data: result.cascades };
         } else if (result.respin != null) {
             result = { type: 'respin', data: result.respin };
         }else {
-            result = { type: 'basespin', data: result.basegame };
+            result = { type: 'basespin', data: result.basespin };
         }
 
         console.log(result);

@@ -76,7 +76,7 @@ export default class ReelsController {
         const reelsConfig = this._getResponsiveConfig();
         const gapBetweenReels = reelsConfig.gapBetweenReels ?? this.model.getGapBetweenReels();
 
-        this.reelsBG = this.scene.add.sprite(0,0,'reelsBG').setOrigin(0);
+        this.reelsBG = this.scene.add.sprite(0,0,'reelsBG').setOrigin(0.2).setScale(0.8);
         this.reelsContainer.add(this.reelsBG);
 
         for (let i = 0; i < this.model.getGrid().length; i++) {
@@ -95,7 +95,7 @@ export default class ReelsController {
         this.reelsFrame = this.scene.add.sprite(this.reelsContainer.x, this.reelsContainer.y - 12, 'reelsFrame')
             .setOrigin(0)
             .setScale(1, 0.93)
-            .setDepth(1)
+            .setDepth(1).setVisible(false)
     }
 
     _createReelView(index) {

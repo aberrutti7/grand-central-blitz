@@ -3,7 +3,7 @@
 /** @type {import('./types').GameConfig} */
 export const config = {
     gameName: "TEMPLATE PROTOTIPO",
-    slotType: "LINES",
+    slotType: "WAYS",
     emojiFavicon: "🎰",
     version: "v0",
     info: false,
@@ -74,14 +74,11 @@ export const config = {
         delayBetweenLines: 200,
     },
     jackpots: [],
-    grid: [4,4,4,4,4,4],
+    grid: [3,3,3],
     reels: { 
         r0: [1,2,3,4],
         r1: [5,6,7,8],
         r2: [9,10,11,12],
-        r3: [7,3,6,8],
-        r4: [7,3,8,8],
-        r5: [7,3,8,8]
     },
     reelsY: [0,0,0,0,0,0],
     reelsConfig: {
@@ -93,7 +90,7 @@ export const config = {
         gapBetweenRows: 0,
     },
     symbolSize:150,
-    debug: false,
+    debug: true,
     background: {
         key: 'bg_base',
         path: 'assets/images/ui/backgrounds/new-bg.png',
@@ -104,11 +101,12 @@ export const config = {
         showLogo: false,
     },
     api: {
-        baseUrl: 'https://api.playcasinoslots.xyz/api',
+        //baseUrl: 'https://api.playcasinoslots.xyz/api',
+        baseUrl: 'https://147.15.17.61/api',
         username: 'JAK',
         password: 'JAK',
-        secretId: '582dfe59-94ed-4c1a-8e7f-24d875560c98',
-        gameName: '3ChestsOfRiches',
+        secretId: '5b52ccb6-0359-4be4-85da-ca3c94ebb3d2',
+        gameName: 'GrandCentralBlitz',
     }
 }
 
