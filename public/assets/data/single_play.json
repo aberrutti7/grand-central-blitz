@@ -1,5 +1,1 @@
-{
-  "spins": [
-	  [{"basespin":{"freeGames":0,"reelsSlices":[[5,9,6,3],[3,6,4,7],[3,6,2,8],[9,4,7,7],[9,2,7,8],[3,9,1,4]],"remainingFreeGames":-1,"wonCredits":10,"wonPrizes":[{"symbols":[{"position":0,"reel":1,"symbolIndex":4},{"position":0,"reel":2,"symbolIndex":4},{"position":3,"reel":0,"symbolIndex":4}]},{"symbols":[{"position":1,"reel":1,"symbolIndex":7},{"position":1,"reel":2,"symbolIndex":7},{"position":2,"reel":0,"symbolIndex":7}]}]}}]
-  ]
-}
+{"spins":[[{"basegame":{"extraReel":[3,2,1],"freespinSpins":-1,"iter":27,"minMultiplier":1,"reelsHeight":6,"reelsSlices":[[4,3,7,7,6,4],[5,5,4,4,2,2],[1,1,3,6,6,1]],"wonCredits":0,"wonPrizes":[]}}],[{"basegame":{"extraReel":[15,1,2],"freespinSpins":-1,"iter":0,"minMultiplier":1,"reelsHeight":3,"reelsSlices":[[2,6,5],[3,3,4],[7,4,4]],"wonCredits":0,"wonPrizes":[]}}]]}
