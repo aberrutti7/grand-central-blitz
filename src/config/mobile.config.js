@@ -5,11 +5,18 @@ export default {
     reels: {
         x: 80,
         y: 640,
-        scaleX: 1,
-        scaleY: 1,
+        scaleX: 1.3,
+        scaleY: 1.3,
         gapBetweenReels: 0,
         gapBetweenRows: 0,
         symbolSize: 150
+    },
+
+    extraReel: {
+        x: 600,
+        y: 187,
+        scale: 1,
+        origin: 0,
     },
 
     controls: {

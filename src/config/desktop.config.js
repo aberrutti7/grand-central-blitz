@@ -3,14 +3,41 @@
 
 export default {
     reels: {
-        x: 512,
+        x: 500,
         y: 190,
-        scaleX: 1,
-        scaleY: 1,
+        scaleX: 1.3,
+        scaleY: 1.3,
         gapBetweenReels: 0,
         gapBetweenRows: 0,
         symbolSize: 150
     },
+
+    extraReel: {
+        x: 885,
+        y: 140,
+        scale: 1.40,
+        origin: 0,
+    },
+
+    extraReelSlots:{
+        x:1238,
+        y: 290,
+        origin: 0,
+    },
+
+    electro1: {
+        x: 1100,
+        y: 215,
+        origin:0.5,
+        scale: 0.145,
+    },
+    electro2: {
+        x: 1100,
+        y: 760,
+        origin:0.5,
+        scale: 0.145,
+    },
+
 
     controls: {
         background: {

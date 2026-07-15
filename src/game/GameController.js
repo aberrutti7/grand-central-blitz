@@ -1,6 +1,6 @@
 import config from "@config";
 import { Model, SpinResult, ResponsiveManager } from "../core";
-import { borderEffect, EFFECTS_MAP, ReelsController } from "../features/reels";
+import { borderEffect, EFFECTS_MAP, ReelsController, ExtraReelController  } from "../features/reels";
 import { UIControlsBar, UIView } from "../ui";
 import GameState from "./GameState";
 import { SLOT_TYPES } from "../constants/slotTypes";
@@ -188,6 +188,21 @@ export default class GameController extends Phaser.Scene {
             scene: this,
             model: this.model
         })
+        
+        this.extraReelFrame = this.add.sprite(0, 0, 'extrareel')
+        .applyResponsive('extraReel');
+
+        this.electro1 = this.add.sprite(0,0, 'electro1')
+        .applyResponsive('electro1').setDepth(2);
+        
+        this.electro2 = this.add.sprite(0,0, 'electro2')
+        .applyResponsive('electro2').setDepth(2);
+
+        this.extraReelController = new ExtraReelController({
+            scene: this,
+            model: this.model
+        })
+        
     }
     
     // -------------------
@@ -296,7 +311,10 @@ export default class GameController extends Phaser.Scene {
             strip: this.lastResult.reelsSlices,
             heights: this.lastResult.reelHeights
         })
-        await this.reelsController.showNewSymbols({ steps: this.lastResult.reelsSlices.length * 6 });
+        await Promise.all([
+            this.reelsController.showNewSymbols({ steps: this.lastResult.reelsSlices.length * 6 }),
+            this._animateExtraReel(),
+        ]);
     }
 
     async handleCascade(){
@@ -306,6 +324,14 @@ export default class GameController extends Phaser.Scene {
         
         this.reelsController.resetQuickStop()
     }
+
+    async _animateExtraReel() {
+        await this.extraReelController.spinMultipliersTo(this.lastResult.extraReel, 0); //delay cuarto reeel
+        
+        await this.applyModifiers();
+        this.controls_bar.disableStopButton();
+    }
+    
 
     async applyModifiers(){
         /** 

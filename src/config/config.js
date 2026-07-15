@@ -84,8 +84,8 @@ export const config = {
     reelsConfig: {
         x: 512,
         y: 190,
-        scaleX: 0.5,
-        scaleY: 0.5,
+        scaleX: 1,
+        scaleY: 1,
         gapBetweenReels: 0,
         gapBetweenRows: 0,
     },

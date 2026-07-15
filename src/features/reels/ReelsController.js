@@ -92,10 +92,10 @@ export default class ReelsController {
             this.reels.push(reelView)
         }
 
-        this.reelsFrame = this.scene.add.sprite(this.reelsContainer.x, this.reelsContainer.y - 12, 'reelsFrame')
+        this.reelsFrame = this.scene.add.sprite(this.reelsContainer.x-45, this.reelsContainer.y - 75, 'reelsFrame')
             .setOrigin(0)
-            .setScale(1, 0.93)
-            .setDepth(1).setVisible(false)
+            .setScale(0.65, 0.75)
+            .setDepth(1).setVisible(true)
     }
 
     _createReelView(index) {
