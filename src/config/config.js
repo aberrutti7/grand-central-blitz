@@ -30,6 +30,16 @@ export const config = {
             visibleInForcedPlay: true,
         },
         {
+            label: 'FREESPINS',
+            spinType: 'fs_play',
+            visibleInForcedPlay: true,
+        },
+        {
+            label: 'PP FS',
+            spinType: 'pp_fs_play',
+            visibleInForcedPlay: true,
+        },
+        {
             label: 'Single Play',
             spinType: 'file-singlePlay',
             visibleInForcedPlay: true,
