@@ -5,9 +5,11 @@ import MultView from "../symbols/MultView";
 const POSSIBLE_MULTIPLIERS = [1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
 
 export default class ExtraReelView {
-    constructor({ scene, model }) {
+    constructor({ scene, model, maskKey = 'extraReelMask', maskConfigKey = 'extraReelMask' }) {
         this.scene = scene;
         this.model = model;
+        this.maskKey = maskKey;           // key de la textura
+        this.maskConfigKey = maskConfigKey; // key del config responsive
 
         // config responsive
         const cfg = ResponsiveManager.getForScene(this.scene)?.get('extraReelSlots') || {};
@@ -52,20 +54,37 @@ export default class ExtraReelView {
     }
 
     _drawMask() {
-        let fillAlpha = this.model.getDebugMode() ? 0.1 : 0;
-        this.maskShape = this.scene.add.graphics();
-        this.maskShape.fillStyle(0xFF0000, fillAlpha);
-        console.log(this.container.x)
-        console.log(this.container.y)
-        const x = this.container.x - 95;
-        const y = this.container.y-95;
-        const width = this.slotWidth * this.container.scaleX;
-        const height = this.slotHeight * this.length * this.container.scaleY;
+        if (!this.scene.textures.exists(this.maskKey)) {
+            console.warn(`[ExtraReelView] textura "${this.maskKey}" no existe → sin máscara`);
+            return;
+        }
 
-        this.maskShape.fillRect(x, y, width, height);
+        // add:false → no entra al display list, pero igual acepta applyResponsive
+        this.maskImage = this.scene.make.image({ key: this.maskKey, add: false })
+            .applyResponsive(this.maskConfigKey);
 
-        const mask = this.maskShape.createGeometryMask();
-        this.container.setMask(mask);
+        this.mask = this.maskImage.createBitmapMask();
+        this.container.setMask(this.mask);
+
+        if (this.model.getDebugMode()) this._drawMaskDebug();
+    }
+
+    _drawMaskDebug() {
+        // copia visible del sprite para ver dónde cae el recorte
+        this.maskDebug = this.scene.add.image(0, 0, this.maskKey)
+            .applyResponsive(this.maskConfigKey)
+            .setAlpha(0.4)
+            .setTint(0xFF0000)
+            .setDepth(999);
+    }
+
+    destroy() {
+        this.container.clearMask(true);
+        this.maskDebug?.destroy();
+        this.maskImage?.destroy();
+        this.maskDebug = null;
+        this.maskImage = null;
+        this.mask = null;
     }
 
     getContainer() {

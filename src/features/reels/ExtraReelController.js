@@ -1,9 +1,10 @@
 import ExtraReelView from "./ExtraReelView";
 
 export default class ExtraReelController {
-    constructor({ scene, model }) {
+    constructor({ scene, model, maskKey = 'extraReelMask' }) {
         this.scene = scene;
         this.model = model;
+        this.maskKey = maskKey;
 
         this._createExtraReelView();
     }
@@ -12,6 +13,7 @@ export default class ExtraReelController {
         this.extraReelView = new ExtraReelView({
             scene: this.scene,
             model: this.model,
+            maskKey: this.maskKey,
         });
     }
 

@@ -186,11 +186,11 @@ export default class GameController extends Phaser.Scene {
     _createReels(){
         this.reelsController = new ReelsController({
             scene: this,
-            model: this.model
+            model: this.model,
         })
         
         this.extraReelFrame = this.add.sprite(0, 0, 'extrareel')
-        .applyResponsive('extraReel');
+        .applyResponsive('extraReel').setDepth(0);
 
         this.electro1 = this.add.sprite(0,0, 'electro1')
         .applyResponsive('electro1').setDepth(2);
@@ -200,7 +200,8 @@ export default class GameController extends Phaser.Scene {
 
         this.extraReelController = new ExtraReelController({
             scene: this,
-            model: this.model
+            model: this.model,
+            maskKey: 'extraReelMask'
         })
         
     }

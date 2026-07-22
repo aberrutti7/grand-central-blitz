@@ -126,6 +126,7 @@ export default class LoadingScreen extends Phaser.Scene {
         this.load.image('reelsFrame', 'assets/images/ui/reels/frame.png');
 
         this.load.image('extrareel','assets/images/ui/reels/extrareel.png' )
+        this.load.image('extraReelMask','assets/images/ui/reels/extrareel-mask.png' )
         this.load.image('electro1','assets/images/ui/reels/electro1.png' )
         this.load.image('electro2','assets/images/ui/reels/electro2.png' )
     }
