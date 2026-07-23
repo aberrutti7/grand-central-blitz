@@ -93,6 +93,7 @@ export default class LoadingScreen extends Phaser.Scene {
         this.loadUI()
         this.loadBackgrounds()
         this.loadReels()
+        this.loadPP()
         this.loadFX()
     }
 
@@ -129,6 +130,10 @@ export default class LoadingScreen extends Phaser.Scene {
         this.load.image('extraReelMask','assets/images/ui/reels/extrareel-mask.png' )
         this.load.image('electro1','assets/images/ui/reels/electro1.png' )
         this.load.image('electro2','assets/images/ui/reels/electro2.png' )
+    }
+
+    loadPP(){
+        this.load.image('train', '/assets/images/ui/pp/train.png')
     }
 
     loadFX() {

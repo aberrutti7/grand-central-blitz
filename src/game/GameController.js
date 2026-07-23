@@ -5,6 +5,13 @@ import { UIControlsBar, UIView } from "../ui";
 import GameState from "./GameState";
 import { SLOT_TYPES } from "../constants/slotTypes";
 import { MYSTERY_ID } from "../constants/IDs";
+import {
+    PP_SCATTER_ID,
+    PP_LEVEL_SCALES,
+    PP_MAX_LEVEL,
+    PP_CONFIG,
+    getPPLevelForCounter
+} from "../constants/PP";
 import { DebugPanel, DevTool, StatsPanel } from "../utils";
 import SessionManager from "../services/SessionManager";
 import DraggableHelper from "../utils/DraggableHelper";
@@ -35,6 +42,7 @@ export default class GameController extends Phaser.Scene {
         this._createStatsPanel()
         this._createSessionManager()
         this._createControllers()
+        this._createPP()
         this._createDevTools()
     }
 
@@ -204,6 +212,205 @@ export default class GameController extends Phaser.Scene {
         
     }
 
+    // -------------------
+    // PP (PERCEIVED PERSISTANCE)
+    // -------------------
+
+    _createPP(){
+        this.train = this.add.image(0, 0, 'train')
+            .applyResponsive('train')
+            .setDepth(3);
+
+        this.PPBaseScaleX = this.train.scaleX;
+        this.PPBaseScaleY = this.train.scaleY;
+        this.PPBaseY = this.train.y;
+
+        this.PPCounter = 0;
+        this.PPLevel = 0;
+
+        this._applyPPLevelScale(0, { instant: true });
+    }
+
+    getPPCounter(){
+        return this.PPCounter;
+    }
+
+    getPPLevel(){
+        return this.PPLevel;
+    }
+
+    getPPTarget(){
+        const matrix = this.train.getWorldTransformMatrix();
+        return { x: matrix.tx, y: matrix.ty };
+    }
+
+    async updatePP(){
+        if (!this.reelsController || !this.train) return;
+
+        const scatters = this.reelsController.getSymbolsWorldPositionById(PP_SCATTER_ID);
+        if (scatters.length === 0) return;
+
+        if (PP_CONFIG.sequential) {
+            for (let i = 0; i < scatters.length; i++) {
+                await this._sendPPParticle(scatters[i]);
+                if (i < scatters.length - 1) {
+                    await this.turboDelay(PP_CONFIG.delayBetweenParticles);
+                }
+            }
+        } else {
+            await Promise.all(scatters.map(s => this._sendPPParticle(s)));
+        }
+    }
+
+    async _sendPPParticle(scatter){
+        const target = this.getPPTarget();
+
+        if (PP_CONFIG.highlightSymbol) {
+            scatter.symbol.growAnimation(0, 0.15);
+        }
+
+        await this.reelsController.sendParticleTo(scatter.x, scatter.y, target.x, target.y);
+        await this.addPP(1);
+    }
+
+    async addPP(amount = 1){
+        const previousLevel = this.PPLevel;
+
+        this.PPCounter = Math.max(0, this.PPCounter + amount);
+
+        const newLevel = Math.min(getPPLevelForCounter(this.PPCounter), PP_MAX_LEVEL);
+
+        if (newLevel !== previousLevel) {
+            this.PPLevel = newLevel;
+            await this._playPPLevelUp(newLevel);
+        } else {
+            await this._bouncePP();
+        }
+    }
+
+    async resetPP({ instant = false } = {}){
+        this.PPCounter = 0;
+        this.PPLevel = 0;
+
+        if (!this.train) return;
+
+        this._killPPTweens();
+        this.train.y = this.PPBaseY;
+
+        await this._applyPPLevelScale(0, { instant });
+    }
+
+    _getPPScaleForLevel(level){
+        const factor = PP_LEVEL_SCALES[level] ?? PP_LEVEL_SCALES[PP_LEVEL_SCALES.length - 1];
+
+        return {
+            scaleX: this.PPBaseScaleX * factor,
+            scaleY: this.PPBaseScaleY * factor
+        };
+    }
+
+    _killPPTweens(){
+        this.tweens.killTweensOf(this.train);
+    }
+
+    _applyPPLevelScale(level, { instant = false } = {}){
+        const { scaleX, scaleY } = this._getPPScaleForLevel(level);
+
+        if (instant) {
+            this.train.setScale(scaleX, scaleY);
+            return Promise.resolve();
+        }
+
+        const { duration, ease } = PP_CONFIG.reset;
+
+        return new Promise(resolve => {
+            this.tweens.add({
+                targets: this.train,
+                scaleX,
+                scaleY,
+                duration,
+                ease,
+                onComplete: resolve
+            });
+        });
+    }
+
+    _bouncePP(){
+        const { scaleX, scaleY } = this._getPPScaleForLevel(this.PPLevel);
+        const { hop, squash, duration } = PP_CONFIG.bounce;
+
+        this._killPPTweens();
+
+        this.tweens.add({
+            targets: this.train,
+            y: this.PPBaseY - hop,
+            duration,
+            ease: 'Sine.Out',
+            yoyo: true
+        });
+
+        return new Promise(resolve => {
+            this.tweens.chain({
+                targets: this.train,
+                tweens: [
+                    {
+                        scaleX: scaleX * (1 + squash),
+                        scaleY: scaleY * (1 - squash),
+                        duration,
+                        ease: 'Sine.Out'
+                    },
+                    {
+                        scaleX: scaleX * (1 - squash * 0.5),
+                        scaleY: scaleY * (1 + squash * 0.8),
+                        duration: duration * 1.2,
+                        ease: 'Sine.InOut'
+                    },
+                    {
+                        scaleX,
+                        scaleY,
+                        duration: duration * 2,
+                        ease: 'Back.Out'
+                    }
+                ],
+                onComplete: () => {
+                    this.train.y = this.PPBaseY;
+                    resolve();
+                }
+            });
+        });
+    }
+
+    _playPPLevelUp(level){
+        const { scaleX, scaleY } = this._getPPScaleForLevel(level);
+        const { overshoot, duration, ease } = PP_CONFIG.levelUp;
+
+        this._killPPTweens();
+
+        return new Promise(resolve => {
+            this.tweens.chain({
+                targets: this.train,
+                tweens: [
+                    {
+                        scaleX: scaleX * (1 + overshoot),
+                        scaleY: scaleY * (1 + overshoot),
+                        duration: duration * 0.45,
+                        ease: 'Sine.Out'
+                    },
+                    {
+                        scaleX,
+                        scaleY,
+                        duration: duration * 0.55,
+                        ease
+                    }
+                ],
+                onComplete: () => {
+                    this.train.y = this.PPBaseY;
+                    resolve();
+                }
+            });
+        });
+    }
+
     _createReels(){
         this.reelsController = new ReelsController({
             scene: this,
@@ -359,6 +566,7 @@ export default class GameController extends Phaser.Scene {
         /** 
          * ACÁ VAN TODAS LAS FUNCIONES DE CADA MODIFICADOR
         */
+        await this.updatePP()
     }
 
     async _resolveResult() {

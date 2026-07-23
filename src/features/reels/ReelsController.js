@@ -290,6 +290,22 @@ export default class ReelsController {
         this._lineGraphics.strokePath();
     }
 
+    getSymbolsWorldPositionById(id) {
+        const result = [];
+
+        this.reels.forEach((reelView, reel) => {
+            reelView.symbols.forEach((symbolView, position) => {
+                if (!symbolView) return;
+                if (symbolView.getId() !== id) return;
+
+                const { x, y } = this._getSymbolWorldPosition({ reel, position });
+                result.push({ reel, position, x, y, symbol: symbolView });
+            });
+        });
+
+        return result;
+    }
+
     _getSymbolWorldPosition({ reel, position }) {
         const symbol = this._getSymbol({ reel, position });
         const matrix = symbol.container.getWorldTransformMatrix();
@@ -458,6 +474,53 @@ export default class ReelsController {
     
     resetReels(){
         this.clearStickies();
+    }
+
+    
+    sendParticleTo(x1, y1, x2, y2, onComplete) {
+        return new Promise((resolve) => {
+            const cx = (x1 + x2) / 2;
+            const cy = (y1 + y2) / 2 - 100;
+
+            const glow = this.scene.add.graphics().setDepth(2.5);
+            const core = this.scene.add.graphics().setDepth(2.5);
+            const trail = [];
+
+            const drawOrb = (g, x, y, alpha) => {
+                g.clear();
+                g.fillStyle(0xFFD700, alpha * 0.3);
+                g.fillCircle(x, y, 18);
+                g.fillStyle(0xFFFFAA, alpha);
+                g.fillCircle(x, y, 6);
+            };
+
+            this.scene.tweens.addCounter({
+                from: 0, to: 1,
+                duration: 800,
+                ease: 'Sine.easeIn',
+                onUpdate: (tween) => {
+                    const t = tween.getValue();
+                    const x = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * x2;
+                    const y = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * y2;
+
+                    const dot = this.scene.add.graphics().setDepth(4);
+                    dot.fillStyle(0xFFA500, 0.5);
+                    dot.fillCircle(x, y, 3);
+                    trail.push(dot);
+                    const dotTween = this.scene.tweens.add({ targets: dot, alpha: 0, duration: 300, onComplete: () => dot.destroy() });
+                    dotTween._notStop = true;
+
+                    drawOrb(glow, x, y, 1);
+                    drawOrb(core, x, y, 1);
+                },
+                onComplete: () => {
+                    glow.destroy();
+                    core.destroy();
+                    if (onComplete) onComplete();
+                    resolve();
+                },
+            });
+        });
     }
 
     clearLines() {

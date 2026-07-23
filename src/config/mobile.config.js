@@ -42,6 +42,12 @@ export default {
         scale: 0.145,
     },
 
+    train: {
+        x: 1600,
+        y: 840,
+        scale: 0.5,
+    },
+
     controls: {
         background: {
             x: 0,
