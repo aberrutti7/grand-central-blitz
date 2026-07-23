@@ -100,7 +100,7 @@ export const config = {
         gapBetweenRows: 0,
     },
     symbolSize:150,
-    debug: true,
+    debug: false,
     background: {
         key: 'bg_base',
         path: 'assets/images/ui/backgrounds/new-bg.png',

@@ -38,13 +38,13 @@ export default {
 
     electro1: {
         x: 1100,
-        y: 215,
+        y: 265,
         origin:0.5,
         scale: 0.145,
     },
     electro2: {
         x: 1100,
-        y: 760,
+        y: 710,
         origin:0.5,
         scale: 0.145,
     },

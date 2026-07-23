@@ -13,10 +13,33 @@ export default {
     },
 
     extraReel: {
-        x: 600,
-        y: 187,
+        x: 500,
+        y: 100,
         scale: 1,
         origin: 0,
+    },
+
+     // Forma de recorte del extra reel (bitmap mask).
+    extraReelMask: {
+        x: 1237,
+        y: 490,
+        scale: 1,
+        scaleX: 1.2,
+        scaleY: 1.36,
+        origin: 0.5,
+    },
+
+    electro1: {
+        x: 1100,
+        y: 265,
+        origin:0.5,
+        scale: 0.145,
+    },
+    electro2: {
+        x: 1100,
+        y: 710,
+        origin:0.5,
+        scale: 0.145,
     },
 
     controls: {

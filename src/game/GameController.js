@@ -8,6 +8,7 @@ import { MYSTERY_ID } from "../constants/IDs";
 import { DebugPanel, DevTool, StatsPanel } from "../utils";
 import SessionManager from "../services/SessionManager";
 import DraggableHelper from "../utils/DraggableHelper";
+import LightningBeam from "../features/reels/effects/LightningBeamShader";
 
 export default class GameController extends Phaser.Scene {
     constructor(){
@@ -30,6 +31,7 @@ export default class GameController extends Phaser.Scene {
         this._createDraggableHelper()
         this._createModel()
         this._createUI()
+        
         this._createStatsPanel()
         this._createSessionManager()
         this._createControllers()
@@ -128,6 +130,23 @@ export default class GameController extends Phaser.Scene {
         });
         this.bgm.play();
     }
+
+    _createLightningBeam() {
+        this.lightningBeam = new LightningBeam(this, {
+            depth: 3,          // por encima de los reels/electro - depth2 
+            thickness: 1.6,
+            amplitude: 9,
+            frequency: 0.02,
+            speed: 3,
+            node: 0.55,
+            gain: 1,         
+           //cyan/plasma/magenta disponibles
+        });
+
+        this.lightningBeam.connect(this.electro1, this.electro2);
+        console.log(this.electro1, this.electro2)
+        
+    }
     
     _createUIControls(){
         this.controls_bar = new UIControlsBar({scene: this, model: this.model})
@@ -181,6 +200,8 @@ export default class GameController extends Phaser.Scene {
 
     _createControllers() {
         this._createReels()
+        this._createLightningBeam()
+        
     }
 
     _createReels(){
@@ -193,10 +214,10 @@ export default class GameController extends Phaser.Scene {
         .applyResponsive('extraReel').setDepth(0);
 
         this.electro1 = this.add.sprite(0,0, 'electro1')
-        .applyResponsive('electro1').setDepth(2);
+        .applyResponsive('electro1').setDepth(2).setOrigin(0.5, 0.8);
         
         this.electro2 = this.add.sprite(0,0, 'electro2')
-        .applyResponsive('electro2').setDepth(2);
+        .applyResponsive('electro2').setDepth(2).setOrigin(0.5, 0.2);
 
         this.extraReelController = new ExtraReelController({
             scene: this,
