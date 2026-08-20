@@ -790,7 +790,7 @@ export default class GameController extends Phaser.Scene {
 
         this._maybeAutoActivateFreeGames();
 
-        // 1) Se descuenta el free game que se está consumiendo, apenas arranca el spin.
+        // 1
         if (this._isFreeSpinStart()) {
             this._fsRawWin = 0;
             this._fsCredited = 0;
@@ -802,12 +802,11 @@ export default class GameController extends Phaser.Scene {
 
         await this.handleSpin()
 
-        // 2) Si la jugada trae PP_scatter: partícula del scatter normal ->
-        //    explosión del tren -> lluvia de PP_scatter.
+        //2
         this.ppResolvedThisStep = false;
         await this.handlePPSequence();
 
-        // 3) Los símbolos ya cayeron: si hay scatters nuevos, se acreditan con delay.
+        // 3
         if (this.state.isBonusActive()) {
             await this._handleScatterRetrigger();
         }
