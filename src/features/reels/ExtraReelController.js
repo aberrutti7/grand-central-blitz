@@ -1,12 +1,15 @@
 import ExtraReelView from "./ExtraReelView";
+import MultiplierBarView from "./MultiplierBarView";
 
 export default class ExtraReelController {
-    constructor({ scene, model, maskKey = 'extraReelMask' }) {
+    constructor({ scene, model, maskKey = 'extraReelMask', multiplierBarKey = 'multiplierBar' }) {
         this.scene = scene;
         this.model = model;
         this.maskKey = maskKey;
+        this.multiplierBarKey = multiplierBarKey;
 
         this._createExtraReelView();
+        this._createMultiplierBar();
     }
 
     _createExtraReelView() {
@@ -17,19 +20,39 @@ export default class ExtraReelController {
         });
     }
 
-    /**
-     * Gira el extra reel hasta mostrar los valores de la play.
-     * @param {number[]} extraReel
-     * @param {number} delay - delay opcional para sincronizar con los reels
-     */
+    _createMultiplierBar() {
+        this.multiplierBar = new MultiplierBarView({
+            scene: this.scene,
+            model: this.model,
+            responsiveKey: this.multiplierBarKey,
+        });
+    }
+
     async spinMultipliersTo(extraReel = [], delay = 0) {
         const spinCount = 5; // vueltas completas antes de frenar
         const steps = this.extraReelView.slots.length * spinCount;
         await this.extraReelView.animateSpin({ delay, steps, extraReel });
     }
 
-    updateMinMultiplier(min = 1) {
+    applyResponsive(key) {
+        this.multiplierBar?.applyResponsive(key);
+    }
+
+    setBaseMinMultiplier(min = 1) {
+        this.multiplierBar?.setBaseMinMultiplier(min);
+    }
+
+    async updateMinMultiplier(min = 1) {
         this.extraReelView.applyMinMultiplier(min);
+        await this.multiplierBar?.updateMinMultiplier(min);
+    }
+
+    async resetMinMultiplier() {
+        await this.multiplierBar?.resetToBase();
+    }
+
+    async pulseMinMultiplier(min = 1) {
+        await this.multiplierBar?.pulseRow(min);
     }
 
     async pulseMultiplier(value) {
@@ -38,5 +61,6 @@ export default class ExtraReelController {
 
     reset() {
         this.extraReelView.reset();
+        this.multiplierBar?.reset();
     }
 }

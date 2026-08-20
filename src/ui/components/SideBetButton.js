@@ -7,12 +7,10 @@ export default class SideBetButton {
     onToggle;
     /** @type {boolean} */
     sideBet = false;
-    /** @type {Array<number>} */
+    /** @type {Array<Object>} */
     sideBets = [];
     /** @type {number} */
     currentIndex = -1;
-    /** @type {number} */
-    sideBetValue;
     /** @type {boolean} */
     hasSideBet;
 
@@ -22,34 +20,39 @@ export default class SideBetButton {
     text;
     label;
 
-    constructor({ scene, onToggle, sideBetValue, sideBets = null, isMobile = false }) {
+    constructor({ scene, onToggle, sideBets = [], config = {}, isMobile = false }) {
         this.scene = scene;
         this.onToggle = onToggle;
-        this.sideBetValue = sideBetValue;
         this.isMobile = isMobile;
 
-        if (Array.isArray(sideBets) && sideBets.length > 0) {
-            this.sideBets = sideBets.map(s => {
-                if (typeof s === 'object') return s;
-                return { id: `sidebet_${s}`, name: `${s}x`, multiplier: s };
-            });
-        } else if (sideBetValue) {
-            this.sideBets = [{ id: 'default', name: `${sideBetValue}x`, multiplier: sideBetValue }];
-        }
+        this.radius = config.radius ?? (isMobile ? 55 : 34);
+        this.hideLabel = config.hideLabel ?? false;
+        this.labelY = config.labelY ?? (this.radius + (isMobile ? 25 : 21));
+        this.maxTextScale = config.textScale ?? (isMobile ? 0.8 : 0.5);
+        this.maxLabelScale = config.labelScale ?? (isMobile ? 0.8 : 0.6);
+
+        this.sideBets = (sideBets || []).map((s, i) => (
+            typeof s === 'object' && s !== null
+                ? s
+                : { id: `sidebet_${i}`, name: `${s}x`, multiplier: s }
+        ));
         this.hasSideBet = this.sideBets.length > 0;
         this.container = this._create();
     }
 
     _create() {
+        const container = this.scene.add.container(0, 0);
+
         if (!this.hasSideBet) {
-            return this.scene.add.container(0, 0);
+            container.setVisible(false);
+            return container;
         }
 
-        const container = this.scene.add.container(0, 0);
-        const radius = this.isMobile ? 55 : 34;
-        const dollarScale = this.isMobile ? 0.8 : 0.5;
-        const labelScale = this.isMobile ? 0.8 : 0.6;
-        const labelY = this.isMobile ? 80 : 55;
+        const radius = this.radius;
+
+        this.glow = this.scene.add.circle(0, 0, radius, COLORS_LIST.accent, 0.6)
+            .setOrigin(0.5)
+            .setAlpha(0);
 
         const bg = this.scene.add.circle(0, 0, radius, COLORS_LIST.bg_black)
             .setOrigin(0.5)
@@ -58,30 +61,23 @@ export default class SideBetButton {
 
         this.sideBetBtn = bg;
 
-        this.glow = this.scene.add.circle(
-            0,
-            0,
-            radius,
-            COLORS_LIST.accent,
-            0.6
-        ).setOrigin(0.5)
-            .setAlpha(0);
-
         this.text = this.scene.add.text(0, 0, "$", {
             fontFamily: "Inter",
             fontSize: 80,
             fill: COLORS_LIST.text_white,
             align: "center",
             lineSpacing: -4,
-        }).setOrigin(0.5).setScale(dollarScale);
+        }).setOrigin(0.5);
 
-        this.label = this.scene.add.text(1, labelY, "SIDE BET", {
+        this.label = this.scene.add.text(1, this.labelY, "SIDE BET", {
             fontFamily: "Inter",
             fontSize: 32,
             fill: COLORS_LIST.text_white,
             align: "center",
             lineSpacing: -4,
-        }).setOrigin(0.5).setScale(labelScale);
+        }).setOrigin(0.5).setVisible(!this.hideLabel);
+
+        this._fitTexts();
 
         container.add([this.glow, bg, this.text, this.label]);
 
@@ -97,7 +93,6 @@ export default class SideBetButton {
             });
         });
         bg.on('pointerout', () => {
-            if (this.sideBet) return;
             this.scene.tweens.add({
                 targets: [bg],
                 scale: 1,
@@ -109,32 +104,47 @@ export default class SideBetButton {
         return container;
     }
 
+    _fitTexts() {
+        this._fitText(this.text, this.radius * 1.55, this.maxTextScale);
+        this._fitText(this.label, this.radius * 2.6, this.maxLabelScale);
+    }
+
+    _fitText(textObj, maxWidth, maxScale) {
+        const width = textObj.width || 1;
+        textObj.setScale(Math.min(maxScale, maxWidth / width));
+    }
+
     toggle() {
-        if (this.sideBets.length === 0) return;
+        if (!this.hasSideBet) return;
 
-        this.currentIndex = (this.currentIndex + 1) % (this.sideBets.length + 1);
-        this.sideBet = this.currentIndex >= 0 && this.currentIndex < this.sideBets.length;
-
-        const current = this.sideBet ? this.sideBets[this.currentIndex] : null;
-        this.onToggle(this.sideBet, current);
+        this.currentIndex = this.currentIndex + 1;
+        if (this.currentIndex >= this.sideBets.length) this.currentIndex = -1;
+        this.sideBet = this.currentIndex >= 0;
 
         this._updateVisuals();
+        this.onToggle(this.sideBet, this.getCurrentSideBet());
     }
 
     _updateVisuals() {
-        if (this.sideBet) {
-            this.text.setText(this.sideBets[this.currentIndex].name);
+        const current = this.getCurrentSideBet();
+
+        if (current) {
+            this.text.setText(`x${current.multiplier}`);
             this.text.setColor(COLORS_LIST.accentHex);
+            this.label.setText(current.name);
             this.label.setColor(COLORS_LIST.accentHex);
         } else {
-            this.text.setText(`$`);
+            this.text.setText("$");
             this.text.setColor(COLORS_LIST.text_white);
+            this.label.setText("SIDE BET");
             this.label.setColor(COLORS_LIST.text_white);
         }
 
+        this._fitTexts();
+
         this.scene.tweens.add({
             targets: this.glow,
-            alpha: this.sideBet ? 1 : 0,
+            alpha: current ? 1 : 0,
             ease: 'Sine.InOut',
             duration: 100,
         });
@@ -155,17 +165,21 @@ export default class SideBetButton {
     }
 
     setActive(value) {
-        this.sideBet = value;
-        if (this.sideBet && this.sideBets.length > 0) {
-            this.currentIndex = 0;
-        } else {
-            this.currentIndex = -1;
-        }
+        if (!this.hasSideBet) return;
+        this.currentIndex = value ? 0 : -1;
+        this.sideBet = this.currentIndex >= 0;
+        this._updateVisuals();
+    }
+
+    reset() {
+        if (!this.hasSideBet) return;
+        this.currentIndex = -1;
+        this.sideBet = false;
         this._updateVisuals();
     }
 
     getCurrentSideBet() {
-        if (!this.sideBet || this.currentIndex < 0) return null;
+        if (this.currentIndex < 0) return null;
         return this.sideBets[this.currentIndex] || null;
     }
 }

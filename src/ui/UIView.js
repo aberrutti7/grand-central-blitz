@@ -26,6 +26,7 @@ export default class UIView extends Phaser.Events.EventEmitter {
         this._createBackgrounds()
         this._createGameInfo()
         this._createSpinWinScreen()
+        this._createMultiWinScreen()
         this._createSignScreen()
         this._createParticles()
         this._createFSLeftSign()
@@ -161,8 +162,8 @@ export default class UIView extends Phaser.Events.EventEmitter {
     }
 
     _createFSLeftSign(){
-        this.FSLeftBackground = this.scene.add.sprite(1535,510,'ui',"FSleft_label").setScale(1.1).setVisible(false).applyResponsive('ui.fsLeft')
-        this.FSLeft = this.scene.add.bitmapText(this.FSLeftBackground.x, this.FSLeftBackground.y - 20, 'slotFont', "10", 18).setOrigin(0.5).setVisible(false)
+        this.FSLeftBackground = this.scene.add.sprite(1535,510,"fsPanel").setScale(0.8).setVisible(false).applyResponsive('ui.fsLeft')
+        this.FSLeft = this.scene.add.bitmapText(this.FSLeftBackground.x, this.FSLeftBackground.y - 40, 'slotFont', "10", 18).setOrigin(0.5).setVisible(false)
     }
 
     _createParticles(){
@@ -195,8 +196,8 @@ export default class UIView extends Phaser.Events.EventEmitter {
         const subtitleY = isMobile ? 720 : 380;
         const amountY = isMobile ? centerY - 100 : centerY - 50;
         const featureWonY = isMobile ? 1340 : 720;
-        const titleFontSize = isMobile ? 56 : 38;
-        const subtitleFontSize = isMobile ? 38 : 26;
+        const titleFontSize = isMobile ? 84 : 58;
+        const subtitleFontSize = isMobile ? 48 : 46;
         const amountFontSize = isMobile ? 96 : 64;
         const featureWonFontSize = isMobile ? 38 : 26;
 
@@ -206,12 +207,32 @@ export default class UIView extends Phaser.Events.EventEmitter {
 
         this.featureWon_SIGN = this.scene.add.bitmapText(centerX, featureWonY, 'slotFont', `FREE SPINS`, featureWonFontSize).setOrigin(0.5).setDepth(2)
 
+        this.lastSpinTitle_SIGN = this.scene.add.text(centerX, titleY, "FREE SPINS OVER", {
+            fontFamily: "Metropolis-Black",
+            fontSize: `${titleFontSize}px`,
+            fill: "#ffffff",
+            stroke: "#000",
+            strokeThickness: 6,
+            align: "center"
+        }).setOrigin(0.5).setDepth(2).setScale(0)
+
+        this.lastSpinSubtitle_SIGN = this.scene.add.text(centerX, subtitleY, "20 FS PLAYED", {
+            fontFamily: "Metropolis-Bold",
+            fontSize: `${subtitleFontSize}px`,
+            fill: "#ffd54f",
+            stroke: "#000",
+            strokeThickness: 4,
+            align: "center"
+        }).setOrigin(0.5).setDepth(2).setScale(0)
+
         this.signContainer.add([
             this.blackScreenBackground,
             this.title_SIGN,
             this.subtitle_SIGN,
             this.amount_SIGN,
             this.featureWon_SIGN,
+            this.lastSpinTitle_SIGN,
+            this.lastSpinSubtitle_SIGN,
         ])
 
         this.signContainer.setVisible(false)
@@ -237,6 +258,8 @@ export default class UIView extends Phaser.Events.EventEmitter {
         this.subtitle_SIGN.setScale(0).clearTint().setPosition(centerX, subtitleY).setFontSize(subtitleFontSize)
         this.amount_SIGN.setScale(0).clearTint().setPosition(centerX, amountY).setFontSize(amountFontSize)
         this.featureWon_SIGN.setScale(0).clearTint().setPosition(centerX, featureWonY).setFontSize(featureWonFontSize)
+        this.lastSpinTitle_SIGN.setScale(0).setPosition(centerX, titleY)
+        this.lastSpinSubtitle_SIGN.setScale(0).setPosition(centerX, subtitleY)
     }
 
     _animateBackground(){
@@ -272,7 +295,7 @@ export default class UIView extends Phaser.Events.EventEmitter {
         const isMobile = responsiveManager ? responsiveManager.isMobileView() : false;
         const screenW = isMobile ? 1080 : 1920;
         const screenH = isMobile ? 1920 : 1080;
-        const textX = isMobile ? 540 : 950;
+        const textX = this.scene.cameras.main.centerX;
         const textY = isMobile ? 960 : 520;
         const fontSize = isMobile ? '90pt' : '90pt';
 
@@ -280,11 +303,99 @@ export default class UIView extends Phaser.Events.EventEmitter {
         this.spinWinBackground.setDepth(100).setVisible(false)
 
         this.spinWinText = this.scene.add.text(textX, textY, "$ 0.04", {
-            font: `bold ${fontSize} Arial`,
+            fontFamily: "Metropolis-Black",
+            fontSize: fontSize,
             fill: "#fcca03",
             stroke:"#000",
             strokeThickness: 8
         }).setDepth(101).setOrigin(0.5).setVisible(false)
+    }
+
+    _createMultiWinScreen(){
+        const responsiveManager = ResponsiveManager.getForScene(this.scene);
+        const isMobile = responsiveManager ? responsiveManager.isMobileView() : false;
+        const screenW = isMobile ? 1080 : 1920;
+        const screenH = isMobile ? 1920 : 1080;
+
+        const centerX = this.scene.cameras.main.centerX;
+        const amountY = isMobile ? 960 : 520;
+        const titleY = amountY - (isMobile ? 150 : 110);
+        const amountFontSize = '90pt';
+        const titleFontSize = isMobile ? '40pt' : '34pt';
+
+        this.multiWinBackground = this.scene.add.graphics();
+        this.multiWinBackground.fillStyle(0x000000, 0.45);
+        this.multiWinBackground.fillRect(0, 0, screenW, screenH);
+        this.multiWinBackground.setDepth(100).setVisible(false)
+
+        this.multiWinTitle = this.scene.add.text(centerX, titleY, "TOTAL WIN", {
+            fontFamily: "Metropolis-Bold",
+            fontSize: titleFontSize,
+            fill: "#ffffff",
+            stroke: "#000",
+            strokeThickness: 6,
+            align: "center"
+        }).setDepth(101).setOrigin(0.5).setVisible(false)
+
+        this.multiWinText = this.scene.add.text(centerX, amountY, "$0.00", {
+            fontFamily: "Metropolis-Black",
+            fontSize: amountFontSize,
+            fill: "#fcca03",
+            stroke: "#000",
+            strokeThickness: 8,
+            align: "center"
+        }).setDepth(101).setOrigin(0.5).setVisible(false)
+    }
+
+    async showMultiWin(value){
+        if (value == 0) return;
+
+        this.multiWinBackground.setVisible(true).setAlpha(0)
+        this.multiWinTitle.setVisible(true).setAlpha(0).setScale(0.7)
+        this.multiWinText.setText("$0.00").setVisible(true).setAlpha(0).setScale(0.7)
+
+        this.scene.tweens.add({
+            targets: [this.multiWinBackground],
+            alpha: 1,
+            duration: 180,
+            ease: 'Cubic.Out'
+        })
+
+        this.scene.tweens.add({
+            targets: [this.multiWinTitle, this.multiWinText],
+            scale: 1,
+            alpha: 1,
+            duration: 250,
+            ease: 'Back.Out'
+        })
+
+        await this.animateCash(this.multiWinText, value, 600)
+    }
+
+    closeMultiWin(){
+        const duration = 250
+
+        return new Promise((resolve)=>{
+            this.scene.tweens.add({
+                targets: [this.multiWinBackground],
+                alpha: 0,
+                duration,
+                ease: 'Cubic.In'
+            })
+            this.scene.tweens.add({
+                targets: [this.multiWinTitle, this.multiWinText],
+                scale: 0.7,
+                alpha: 0,
+                duration,
+                ease: 'Cubic.In',
+                onComplete: () => {
+                    this.multiWinBackground.setVisible(false)
+                    this.multiWinTitle.setVisible(false)
+                    this.multiWinText.setVisible(false)
+                    resolve()
+                }
+            })
+        })
     }
 
     _createGameInfo(){
@@ -326,14 +437,14 @@ export default class UIView extends Phaser.Events.EventEmitter {
         await this.animateCash(this.spinWinText, value)
     }
 
-    animateCash(element, value){
+    animateCash(element, value, duration = 800){
         let currentValue = 0;
 
         return new Promise((resolve)=>{
             this.scene.tweens.addCounter({
                 from: 0.00,
                 to: value,
-                duration: 800,
+                duration,
                 ease: 'Cubic.Out',
                 onUpdate: (tween) => {
                     currentValue = tween.getValue();
@@ -426,6 +537,34 @@ export default class UIView extends Phaser.Events.EventEmitter {
         this._animateBackground()
         this._animateGrowElement(this.title_SIGN)
         await this._animateGrowElement(this.subtitle_SIGN)
+    }
+
+    async showLastSpinSign(fsPlayed = 0, title = "FREE SPINS OVER"){
+        this.signContainer.setVisible(true)
+        this._resetElements()
+
+        const responsiveManager = ResponsiveManager.getForScene(this.scene);
+        const isMobile = responsiveManager ? responsiveManager.isMobileView() : false;
+
+        const centerX = this.scene.cameras.main.centerX;
+        const titleY = isMobile ? 720 : 390;
+        const subtitleY = isMobile ? 960 : 510;
+        const titleFontSize = isMobile ? 110 : 76;
+        const subtitleFontSize = isMobile ? 58 : 40;
+
+        this.lastSpinTitle_SIGN.setText(title).setFontSize(titleFontSize).setPosition(centerX, titleY);
+        this.lastSpinSubtitle_SIGN.setText(`${fsPlayed} FS PLAYED`).setFontSize(subtitleFontSize).setPosition(centerX, subtitleY);
+
+        this._animateBackground()
+        this._animateGrowElement(this.lastSpinTitle_SIGN)
+        await this._animateGrowElement(this.lastSpinSubtitle_SIGN)
+    }
+
+    async closeLastSpinSign(){
+        await this._hideSignElements([
+            this.lastSpinTitle_SIGN,
+            this.lastSpinSubtitle_SIGN,
+        ])
     }
 
     async _hideSignElements(elements = []){

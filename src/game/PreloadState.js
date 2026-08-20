@@ -140,6 +140,7 @@ export default class PreloadState extends Phaser.Scene {
             await document.fonts.ready;
             await document.fonts.load('16px Inter');
             await document.fonts.load('bold 16px Inter');
+            
         } catch (e) {
             console.warn('Font loading warning:', e);
         }

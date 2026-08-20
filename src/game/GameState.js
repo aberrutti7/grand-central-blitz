@@ -13,6 +13,7 @@ export default class GameState {
         this.sideBetValue = 0
         this.spinWin = 0
         this.totalWin = 0
+        this.creditedWin = 0
 
         this.balance = this.model.getBalance()
 
@@ -104,7 +105,7 @@ export default class GameState {
         let bonusCost;
 
         if (priceType === 'multiplier') {
-            bonusCost = this.totalBet * cost;
+            bonusCost = this.getBaseBet() * cost;
         } else if (priceType === 'fixed') {
             bonusCost = cost;
         }
@@ -125,20 +126,45 @@ export default class GameState {
 
     setTotalWin(value) {
         this.totalWin = value * (this.betLevel / this.bet);
+        this.creditedWin = 0;
     }
 
     getTotalWin(){
         return (this.totalWin / 100).toFixed(2);
     }
 
-    addWin(value) {
+    getCash(value){
+        return (value * (this.betLevel / this.bet) / 100).toFixed(2);
+    }
+
+    addWin(value, accumulate = true) {
         const real = value * (this.betLevel / this.bet);
 
-        this.balance += real;
-        this.totalWin += real;
+        if (accumulate) this.totalWin += real;
         this.spinWin = real
 
         this._calculateBigWin(value)
+    }
+
+    accrueWin(value) {
+        const real = value * (this.betLevel / this.bet);
+
+        this.totalWin += real;
+
+        return real;
+    }
+
+    commitWin() {
+        this.balance += this.totalWin - this.creditedWin;
+        this.creditedWin = this.totalWin;
+    }
+
+    settleWin(value) {
+        const real = value * (this.betLevel / this.bet);
+
+        this.balance += real - this.creditedWin;
+        this.creditedWin = real;
+        this.totalWin = real;
     }
 
     hasNoWinOrFreeGames(){
@@ -202,6 +228,7 @@ export default class GameState {
             this.sideBetName = sideBet.name
             this.sideBetValue = sideBet.multiplier
         }
+        this.setTotalBet(this.getBaseBet())
     }
 
     getSideBetId(){

@@ -24,14 +24,12 @@ export default class BetSelector {
     availableBetsPanelContainer;
     betHitArea;
 
-    constructor({ scene, onBetChange, onSideBetChange, bet, availableBets, sideBets = [], config = {} }) {
+    constructor({ scene, onBetChange, bet, availableBets, config = {} }) {
         this.scene = scene;
         this.onBetChange = onBetChange;
-        this.onSideBetChange = onSideBetChange;
         this.currentBet = bet;
         this.baseBet = bet;
         this.betValues = availableBets;
-        this.sideBets = sideBets;
         this.totalBet = Number((bet / 100).toFixed(2));
         this.config = config;
         this.container = this._create();
@@ -117,14 +115,9 @@ export default class BetSelector {
             const btnHeight = 80;
             const rowsHeight = btnsPerColumn * btnHeight + (btnsPerColumn - 1) * gapBetweenRows;
 
-            const hasSideBets = this.sideBets && this.sideBets.length > 0;
-            const sideBetsSectionHeight = hasSideBets ? 120 : 0;
-            const sideBetsLabelHeight = hasSideBets ? 30 : 0;
-            const sideBetsGap = hasSideBets ? 20 : 0;
-
             const closeBtnSize = 70;
             const closeBtnY = 15;
-            const buttonsStartY = closeBtnY + closeBtnSize + 30 + sideBetsSectionHeight + sideBetsLabelHeight + sideBetsGap;
+            const buttonsStartY = closeBtnY + closeBtnSize + 30;
             const panelHeight = buttonsStartY + rowsHeight + sidePadding + 30;
 
             this._mobilePanelHeight = panelHeight;
@@ -175,54 +168,10 @@ export default class BetSelector {
 
             this._createBetButtonsMobile(availableBetsContainer, columns_MOBILE, sidePadding, btnWidth, btnHeight, gapBetweenRows, gapBetweenColumns, panelWidth);
 
-            const panelChildren = [availableBetsPanel, availableBetsContainer, closeBtn, closeIcon, closeHitArea];
-
-            if (hasSideBets) {
-                this._createSideBetButtonsMobile(panelChildren, panelWidth, closeBtnY + closeBtnSize + 30);
-            }
-
-            this.availableBetsPanelContainer.add(panelChildren);
+            this.availableBetsPanelContainer.add([availableBetsPanel, availableBetsContainer, closeBtn, closeIcon, closeHitArea]);
         } else {
-            const hasSideBetsDesktop = this.sideBets && this.sideBets.length > 0;
-
-            let sideBetsExtraHeight = 0;
-            let sideBetsLayout = null;
-            if (hasSideBetsDesktop) {
-                const sideBetBtnHeightCalc = 28;
-                const sideBetGapCalc = 6;
-                const sideBetHpadCalc = 14;
-                const tempLabelStyleCalc = { fontFamily: "Inter", fontSize: 16, fontStyle: "bold" };
-                const btnWidthsCalc = this.sideBets.map(s => {
-                    const tempText = this.scene.add.text(0, 0, s.name, tempLabelStyleCalc);
-                    const w = Math.ceil(tempText.width) + sideBetHpadCalc * 2;
-                    tempText.destroy();
-                    return w;
-                });
-
-                const colsCalc = [];
-                let currentRowCalc = [];
-                let currentRowWidthCalc = 0;
-                btnWidthsCalc.forEach((w, i) => {
-                    const neededWidth = currentRowCalc.length === 0 ? w : currentRowWidthCalc + sideBetGapCalc + w;
-                    if (neededWidth > gridWidth && currentRowCalc.length > 0) {
-                        colsCalc.push(currentRowCalc);
-                        currentRowCalc = [i];
-                        currentRowWidthCalc = w;
-                    } else {
-                        currentRowCalc.push(i);
-                        currentRowWidthCalc = neededWidth;
-                    }
-                });
-                if (currentRowCalc.length > 0) colsCalc.push(currentRowCalc);
-
-                const numRowsCalc = colsCalc.length;
-                const rowGapCalc = 6;
-                sideBetsExtraHeight = 70 + (numRowsCalc - 1) * (sideBetBtnHeightCalc + rowGapCalc);
-                sideBetsLayout = { cols: colsCalc, btnWidths: btnWidthsCalc, numRows: numRowsCalc };
-            }
-
             availableBetsPanel.fillStyle(COLORS_LIST.bg_black, 0.6);
-            availableBetsPanel.fillRoundedRect(0, 0, gridWidth + padding * 2, gridHeight + padding * 2 + sideBetsExtraHeight, {
+            availableBetsPanel.fillRoundedRect(0, 0, gridWidth + padding * 2, gridHeight + padding * 2, {
                 tl: 10,
                 tr: 10,
                 bl: 0,
@@ -230,7 +179,7 @@ export default class BetSelector {
             });
             availableBetsContainer.setPosition(padding, padding);
             this.availableBetsPanelContainer.x = this.config.panelOffsetX ?? -15;
-            this.availableBetsPanelContainer.y = this.config.panelOffsetY || (-gridHeight - padding - 12 - sideBetsExtraHeight);
+            this.availableBetsPanelContainer.y = this.config.panelOffsetY || (-gridHeight - padding - 12);
 
             this.betButtons = [];
             for (let i = 0; i < this.betValues.length; i++) {
@@ -258,47 +207,6 @@ export default class BetSelector {
                 availableBetsContainer.add(button);
             }
 
-            const hasSideBets = this.sideBets && this.sideBets.length > 0;
-            if (hasSideBets && sideBetsLayout) {
-                const sideBetLabelY = gridHeight + 20;
-                const sideBetLabel = this.scene.add.text(gridWidth / 2, sideBetLabelY, "SIDE BETS", {
-                    fontFamily: "Inter",
-                    fontSize: 12,
-                    fontStyle: "bold",
-                    fill: COLORS_LIST.accentHex,
-                    align: "center",
-                    letterSpacing: 2,
-                }).setOrigin(0.5);
-                availableBetsContainer.add(sideBetLabel);
-
-                this.sideBetButtons = [];
-                const sideBetBtnHeight = 28;
-                const sideBetGap = 6;
-                const rowGap = 6;
-                const sideBetY = sideBetLabelY + 20;
-                const { cols, btnWidths } = sideBetsLayout;
-
-                cols.forEach((row, rowIdx) => {
-                    const rowY = sideBetY + rowIdx * (sideBetBtnHeight + rowGap);
-                    const rowBtnWidths = row.map(i => btnWidths[i]);
-                    const rowTotalWidth = rowBtnWidths.reduce((a, b) => a + b, 0) + sideBetGap * (row.length - 1);
-                    const rowStartX = (gridWidth - rowTotalWidth) / 2;
-
-                    let currentX = rowStartX;
-                    row.forEach((i) => {
-                        const sbContainer = this._createSideBetButtonDesktop({
-                            x: currentX,
-                            y: rowY,
-                            sideBet: this.sideBets[i],
-                            width: btnWidths[i],
-                            height: sideBetBtnHeight
-                        });
-                        this.sideBetButtons.push({ textObj: sbContainer, sideBet: this.sideBets[i] });
-                        availableBetsContainer.add(sbContainer);
-                        currentX += btnWidths[i] + sideBetGap;
-                    });
-                });
-            }
         }
 
         if (isMobile) {
@@ -359,7 +267,6 @@ export default class BetSelector {
         });
 
         hitArea.on('pointerup', () => {
-            this.clearSideBet();
             this.setTotalBet(baseValue / 100);
             this.closePanel();
         });
@@ -418,201 +325,6 @@ export default class BetSelector {
 
             container.add(button);
         }
-    }
-
-    _createSideBetButtonsMobile(panelChildren, panelWidth, startY) {
-        const labelY = startY;
-        const label = this.scene.add.text(panelWidth / 2, labelY, "SIDE BETS", {
-            fontFamily: "Inter",
-            fontSize: 24,
-            fontStyle: "bold",
-            fill: COLORS_LIST.accentHex,
-            align: "center",
-            letterSpacing: 4,
-        }).setOrigin(0.5);
-        panelChildren.push(label);
-
-        const sidePadding = 40;
-        const gapBetweenColumns = 20;
-        const btnWidth = (panelWidth - sidePadding * 2 - gapBetweenColumns * (this.sideBets.length - 1)) / this.sideBets.length;
-        const btnHeight = 70;
-        const btnY = labelY + 40;
-
-        this.sideBetButtons = [];
-
-        this.sideBets.forEach((sideBet, i) => {
-            const x = sidePadding + i * (btnWidth + gapBetweenColumns);
-            const container = this._createSideBetButton({
-                x,
-                y: btnY,
-                sideBet,
-                width: btnWidth,
-                height: btnHeight
-            });
-            this.sideBetButtons.push({ textObj: container, sideBet });
-            panelChildren.push(container);
-        });
-    }
-
-    _createSideBetButton({ x, y, sideBet, width, height }) {
-        const radius = 15;
-
-        const bg = this.scene.add.graphics();
-        bg.fillStyle(0x000000, 0);
-        bg.lineStyle(2, 0xffffff, 1);
-        bg.fillRoundedRect(0, 0, width, height, radius);
-        bg.strokeRoundedRect(0, 0, width, height, radius);
-
-        const hitArea = this.scene.add.rectangle(0, 0, width, height, 0x000000, 0)
-            .setOrigin(0);
-        hitArea.setInteractive({ useHandCursor: true });
-
-        const label = this.scene.add.text(width / 2, height / 2, sideBet.name, {
-            fontFamily: "Inter",
-            fontSize: 32,
-            fontStyle: "bold",
-            fill: COLORS_LIST.text_white,
-            align: "center",
-        }).setOrigin(0.5);
-
-        hitArea.on('pointerover', () => {
-            bg.clear();
-            bg.fillStyle(0x000000, 0.8);
-            bg.fillRoundedRect(0, 0, width, height, radius);
-        });
-
-        hitArea.on('pointerout', () => {
-            const isActive = this.activeSideBet && this.activeSideBet.id === sideBet.id;
-            this._drawSideBetButton(bg, width, height, radius, isActive);
-        });
-
-        hitArea.on('pointerup', () => {
-            if (this.activeSideBet && this.activeSideBet.id === sideBet.id) {
-                this.clearSideBet();
-            } else {
-                this.setSideBet(sideBet);
-            }
-        });
-
-        const container = this.scene.add.container(x, y);
-        container.add([bg, hitArea, label]);
-        container.bg = bg;
-        container.label = label;
-        container.btnWidth = width;
-        container.btnHeight = height;
-        container.radius = radius;
-        return container;
-    }
-
-    _createSideBetButtonDesktop({ x, y, sideBet, width, height }) {
-        const radius = 8;
-
-        const bg = this.scene.add.graphics();
-        bg.fillStyle(0x000000, 0);
-        bg.lineStyle(1, 0xffffff, 1);
-        bg.fillRoundedRect(0, 0, width, height, radius);
-        bg.strokeRoundedRect(0, 0, width, height, radius);
-
-        const hitArea = this.scene.add.rectangle(0, 0, width, height, 0x000000, 0)
-            .setOrigin(0);
-        hitArea.setInteractive({ useHandCursor: true });
-
-        const label = this.scene.add.text(width / 2, height / 2, sideBet.name, {
-            fontFamily: "Inter",
-            fontSize: 16,
-            fontStyle: "bold",
-            fill: COLORS_LIST.text_white,
-            align: "center",
-        }).setOrigin(0.5);
-
-        hitArea.on('pointerover', () => {
-            bg.clear();
-            bg.fillStyle(0x000000, 0.8);
-            bg.fillRoundedRect(0, 0, width, height, radius);
-        });
-
-        hitArea.on('pointerout', () => {
-            const isActive = this.activeSideBet && this.activeSideBet.id === sideBet.id;
-            this._drawSideBetButton(bg, width, height, radius, isActive);
-        });
-
-        hitArea.on('pointerup', () => {
-            if (this.activeSideBet && this.activeSideBet.id === sideBet.id) {
-                this.clearSideBet();
-            } else {
-                this.setSideBet(sideBet);
-            }
-        });
-
-        const container = this.scene.add.container(x, y);
-        container.add([bg, hitArea, label]);
-        container.bg = bg;
-        container.label = label;
-        container.btnWidth = width;
-        container.btnHeight = height;
-        container.radius = radius;
-        return container;
-    }
-
-    _drawSideBetButton(bg, width, height, radius, isActive) {
-        bg.clear();
-        if (isActive) {
-            bg.lineStyle(2, COLORS_LIST.accent, 1);
-        } else {
-            bg.lineStyle(1, 0xffffff, 1);
-        }
-        bg.fillRoundedRect(0, 0, width, height, radius);
-        bg.strokeRoundedRect(0, 0, width, height, radius);
-    }
-
-    setSideBet(sideBet) {
-        this.activeSideBet = sideBet;
-        this.currentMultiplier = sideBet.multiplier;
-        this.totalBet = (this.baseBet / 100) * this.currentMultiplier;
-        this.betValue.setText(`$${this.totalBet.toFixed(2)}`);
-        if (this.onSideBetChange) this.onSideBetChange(sideBet);
-        this.onBetChange(this.baseBet);
-        this._refreshSideBetButtons();
-        this._refreshBetButtonValues();
-    }
-
-    clearSideBet() {
-        this.activeSideBet = null;
-        this.currentMultiplier = 1;
-        this.totalBet = this.baseBet / 100;
-        this.betValue.setText(`$${this.totalBet.toFixed(2)}`);
-        if (this.onSideBetChange) this.onSideBetChange(null);
-        this.onBetChange(this.baseBet);
-        this._refreshSideBetButtons();
-        this._refreshBetButtonValues();
-    }
-
-    _refreshBetButtonValues() {
-        if (!this.betButtons) return;
-        this.betButtons.forEach((element) => {
-            const container = element.textObj;
-            const text = container.list[2];
-            if (text) {
-                const baseValue = element.baseValue;
-                const multiplier = element.baseMultiplier;
-                const totalValue = (baseValue * this.currentMultiplier / 100).toFixed(2);
-                text.setText(`$${totalValue}`);
-            }
-            const isSideBet = this.currentMultiplier > 1;
-            this.drawButton(container.bg, container.btnWidth, container.btnHeight, container.radius, isSideBet, false);
-            if (text) {
-                text.setColor(isSideBet ? COLORS_LIST.accentHex : COLORS_LIST.text_white);
-            }
-        });
-    }
-
-    _refreshSideBetButtons() {
-        if (!this.sideBetButtons) return;
-        this.sideBetButtons.forEach(({ textObj, sideBet }) => {
-            const isActive = this.activeSideBet && this.activeSideBet.id === sideBet.id;
-            textObj.label.setColor(isActive ? COLORS_LIST.accentHex : COLORS_LIST.text_white);
-            this._drawSideBetButton(textObj.bg, textObj.btnWidth, textObj.btnHeight, textObj.radius, isActive);
-        });
     }
 
     updateBetValues(isSideBet, sideBetMultiplier, regularBet){

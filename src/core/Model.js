@@ -210,8 +210,8 @@ export default class Model extends Phaser.Events.EventEmitter {
 
         let result = this.lastResult.shift();
         
-        if (result.freespin != null) {
-            result = { type: 'freespin', data: result.freespin };
+        if (result.freespins != null) {
+            result = { type: 'freespin', data: result.freespins };
         } else if (result.cascades != null) {
             result = { type: 'cascade', data: result.cascades };
         } else if (result.respin != null) {

@@ -16,6 +16,9 @@ export default class BootScene extends Phaser.Scene {
                 'assets/images/ui/screens/icon.png'
             );
         }
+        this.load.image('logo', 'assets/images/ui/panels/train.png')
+        
+
         if (config.background?.key) {
             this.load.image(config.background.key, config.background.path);
         }

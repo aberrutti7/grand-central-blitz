@@ -72,9 +72,9 @@ export default class ReelsController {
     }
 
     _createReels() {
-        const initialX = 0
+        const initialX = 6
         const reelsConfig = this._getResponsiveConfig();
-        const gapBetweenReels = reelsConfig.gapBetweenReels ?? this.model.getGapBetweenReels();
+        const gapBetweenReels = reelsConfig.gapBetweefnReels ?? this.model.getGapBetweenReels();
 
         this.reelsBG = this.scene.add.sprite(0,0,'reelsBG').setOrigin(0.2).setScale(0.8);
         this.reelsContainer.add(this.reelsBG);
@@ -92,9 +92,9 @@ export default class ReelsController {
             this.reels.push(reelView)
         }
 
-        this.reelsFrame = this.scene.add.sprite(this.reelsContainer.x-45, this.reelsContainer.y - 75, 'reelsFrame')
+        this.reelsFrame = this.scene.add.sprite(this.reelsContainer.x-45, this.reelsContainer.y - 94, 'reelsFrame')
             .setOrigin(0)
-            .setScale(0.65, 0.75)
+            .setScale(0.705, 0.825)
             .setDepth(1).setVisible(true)
     }
 
@@ -267,7 +267,7 @@ export default class ReelsController {
                         effects.map(effect => effect(symbols, duration, delay))
                     );
                 } else {
-                    await delay(duration); // <- espera aunque no haya effects
+                    await delay(duration); // espera aunque no haya effects
                 }
 
                 this._lineGraphics.clear();
@@ -318,6 +318,37 @@ export default class ReelsController {
             x: matrix.tx + halfWidth, 
             y: matrix.ty + halfHeight 
         };
+    }
+
+    getSymbolAt({ reel, position }) {
+        return this.reels[reel]?.symbols?.[position] ?? null;
+    }
+
+    /** Posición y tamaño en coordenadas de mundo del slot (reel, position). */
+    getSlotWorldRect({ reel, position }) {
+        const symbol = this.getSymbolAt({ reel, position });
+        if (!symbol) return null;
+
+        const matrix = symbol.container.getWorldTransformMatrix();
+
+        const width = symbol.view.displayWidth * matrix.scaleX;
+        const height = symbol.view.displayHeight * matrix.scaleY;
+
+        return {
+            x: matrix.tx + width / 2,
+            y: matrix.ty + height / 2,
+            width,
+            height
+        };
+    }
+
+    /** Cambia el símbolo de un slot sin volver a girar el reel. */
+    setSymbolId({ reel, position }, id) {
+        const symbol = this.getSymbolAt({ reel, position });
+        if (!symbol) return null;
+
+        symbol.changeView(id);
+        return symbol;
     }
 
     async playWaysAnimation({ wonPrizes, effects = [], duration, delayBetweenWays = 0}) {

@@ -2,12 +2,12 @@ import ApiService from "../services/ApiService";
 import { config } from "../config/config";
 import { DebugPanel } from "../utils";
 
-const FINAL_MESSAGE = "FINAL MESSAGE"
+const FINAL_MESSAGE = "The train is ready to depart!"
 
 const COLORS = {
-    track: 0x222222, // Nota: Este valor tiene que estar en hexadecimales. 0x...
-    progress: 0x28E11B,
-    status: '#28E11B',
+    track: 0x1b35e1, // Nota: Este valor tiene que estar en hexadecimales. 0x...
+    progress: 0x1b35e1,
+    status: '#1b35e1',
 }
 
 export default class LoadingScreen extends Phaser.Scene {
@@ -58,6 +58,8 @@ export default class LoadingScreen extends Phaser.Scene {
             'assets/images/ui/fonts/slotFont.xml'
         );
 
+        
+
         this.load.on('progress', value => {
             if (!this.gameConfig.loadingScreen.show) return;
             this.setProgress(value * 0.7, 'Loading resources...');
@@ -93,6 +95,7 @@ export default class LoadingScreen extends Phaser.Scene {
         this.loadUI()
         this.loadBackgrounds()
         this.loadReels()
+        this.loadPanels()
         this.loadPP()
         this.loadFX()
     }
@@ -102,6 +105,12 @@ export default class LoadingScreen extends Phaser.Scene {
             'symbols',
             'assets/images/symbols/symbols.png',
             'assets/images/symbols/symbols.json',
+            Phaser.Loader.TEXTURE_ATLAS_JSON_HASH
+        );
+        this.load.atlas(
+            'mult',
+            'assets/images/symbols/mult.png',
+            'assets/images/symbols/mult.json',
             Phaser.Loader.TEXTURE_ATLAS_JSON_HASH
         );
     }
@@ -123,6 +132,9 @@ export default class LoadingScreen extends Phaser.Scene {
     }
 
     loadReels(){
+        this.load.image('train', 'assets/images/ui/reels/train2.png')
+        this.load.image('fsPanel', 'assets/images/ui/reels/fspanel2.png')
+
         this.load.image('reelsBG', 'assets/images/ui/reels/bg.png');
         this.load.image('reelsFrame', 'assets/images/ui/reels/frame.png');
 
@@ -130,16 +142,30 @@ export default class LoadingScreen extends Phaser.Scene {
         this.load.image('extraReelMask','assets/images/ui/reels/extrareel-mask.png' )
         this.load.image('electro1','assets/images/ui/reels/electro1.png' )
         this.load.image('electro2','assets/images/ui/reels/electro2.png' )
+        this.load.image('squareExtra', 'assets/images/ui/reels/square.png')
+        this.load.image('squareBG',  'assets/images/ui/reels/squareBG.png')
+
+        
     }
 
     loadPP(){
         this.load.image('train', '/assets/images/ui/pp/train.png')
     }
 
+    loadPanels(){
+        
+        
+        this.load.image('grand_jackpot', '/assets/images/ui/panels/grand_jackpot.png')
+        this.load.image('major_jackpot', '/assets/images/ui/panels/major_jackpot.png')
+        this.load.image('mega_jackpot', '/assets/images/ui/panels/mega_jackpot.png')
+        this.load.image('mini_jackpot', '/assets/images/ui/panels/mini_jackpot.png')
+        this.load.image('minor_jackpot', '/assets/images/ui/panels/minor_jackpot.png')
+    }
+
     loadFX() {
         this.load.image('spark', 'assets/images/ui/particles/spark.png');
         this.load.image('flare', 'assets/images/ui/particles/flare.png');
-        //this.load.image('luz1', 'assets/images/ui/particles/luz1.png');
+        this.load.image('rays', 'assets/images/ui/particles/rays.png');
     }
 
     // ==============================
@@ -226,6 +252,7 @@ export default class LoadingScreen extends Phaser.Scene {
             document.fonts.forEach(font => {
                 document.fonts.load(`30px "${font.family}"`);
             });
+            await this._loadFonts()
             await document.fonts.ready;
 
             if (this.gameConfig.loadingScreen.show) {
@@ -243,8 +270,20 @@ export default class LoadingScreen extends Phaser.Scene {
                 this._statusText.setText('Connection failed');
             }
         }
+
     }
 
+    async _loadFonts() {
+        const fonts = [
+            new FontFace('Metropolis-Bold', 'url(assets/images/ui/fonts/Metropolis-Bold.otf)'),
+            new FontFace('Metropolis-Black', 'url(assets/images/ui/fonts/Metropolis-Black.otf)'),
+        ];
+
+        await Promise.all(fonts.map(async font => {
+            await font.load();
+            document.fonts.add(font);
+        }));
+    }
     async _checkReady() {
         if (!this._assetsLoaded || !this._loginDone) return;
 
@@ -323,11 +362,13 @@ export default class LoadingScreen extends Phaser.Scene {
 
     _buildBackground(W, H) {
         if (this.gameConfig.background?.key) {
-            this.bg = this.add.sprite(0,0,this.gameConfig.background.key).setOrigin(0)
+            this.bg = this.add.sprite(1920/2,1080/2,this.gameConfig.background.key).setOrigin(0.5)
         }
         if (this._isMobile){
-            this.bg.setX(1080)
-            this.bg.setAngle(90)
+            this.bg.setX(1080/2).setY(1920/2).setOrigin(0.5)
+
+
+            //this.bg.setAngle(90)
         }
     }
 
@@ -349,25 +390,27 @@ export default class LoadingScreen extends Phaser.Scene {
         const titleY = this._isMobile ? H * 0.45 : H * 0.45;
         const fontSize = this._isMobile ? '72px' : '100px';
         const strokeThickness = this._isMobile ? 4 : 6;
-        this.add.text(
+        this.add.sprite(
             W / 2,
             titleY,
-            this.gameConfig.gameName.toUpperCase(),
-            {
-                fontFamily: 'Arial, sans-serif',
-                fontSize: fontSize,
-                fontStyle: 'bold',
-                color: '#FFF',
-                stroke: '#222',
-                strokeThickness: strokeThickness,
-                shadow: {
-                    offsetX: 2,
-                    offsetY: 2,
-                    color: '#000000',
-                    blur: 8,
-                    fill: true
-                }
-            }
+
+            'logo'
+            // this.gameConfig.gameName.toUpperCase(),
+            // {
+            //     fontFamily: 'Arial, sans-serif',
+            //     fontSize: fontSize,
+            //     fontStyle: 'bold',
+            //     color: '#FFF',
+            //     stroke: '#222',
+            //     strokeThickness: strokeThickness,
+            //     shadow: {
+            //         offsetX: 2,
+            //         offsetY: 2,
+            //         color: '#000000',
+            //         blur: 8,
+            //         fill: true
+            //     }
+            // }
         )
         .setOrigin(0.5);
     }
@@ -397,7 +440,7 @@ export default class LoadingScreen extends Phaser.Scene {
         this._statusText = this.add.text(W / 2, barY + (this._isMobile ? 70 : 40), 'Loading...', {
             fontFamily: 'Arial, sans-serif',
             fontSize: fontSize,
-            color: '#28E11B',
+            color: '#1b35e1',
         }).setOrigin(0.5).setAlpha(0.7);
     }
 

@@ -3,58 +3,93 @@
 
 export default {
     reels: {
-        x: 500,
+        x: 509,
         y: 190,
-        scaleX: 1.3,
-        scaleY: 1.3,
+        scaleX: 1.4,
+        scaleY: 1.4,
         gapBetweenReels: 0,
         gapBetweenRows: 0,
         symbolSize: 150
     },
 
     extraReel: {
-        x: 885,
-        y: 140,
-        scale: 1.40,
+        x: 909,
+        y: 141,
+        scaleX: 1.53,
+        scaleY: 1.48,
         origin: 0,
     },
 
-    extraReelSlots:{
-        x:1238,
-        y: 290,
+    extraReelSlots: {
+        x: 1294,
+        y: 315,
         origin: 0,
+    },
+
+
+    multiplierBar: {
+        orientation: 'vertical',
+        x: 400,
+        y: 240,
+        scale: 1,
+        rowWidth: 90,
+        rowHeight: 44,
+        gap: 15,
+        fontFamily: 'Metropolis-Black',
+        fontSize: 34,
+        labelPrefix: 'x',
+        color: '#fede5d',
+        strokeColor: '#980000',
+        strokeThickness: 6,
+        strikeColor: 0xff2d2d,
+        strikeWidth: 3,
+        dimAlpha: 0.3,
+        stepDelay: 90,
+        stepDuration: 140,
+        depth: 2.6,
     },
 
     // Forma de recorte del extra reel (bitmap mask).
-    
     extraReelMask: {
-        x: 1237,
-        y: 490,
+        x: 1293,
+        y: 510,
         scale: 1,
-        scaleX: 1.2,
-        scaleY: 1.36,
+        scaleX: 1.4,
+        scaleY: 1.44,
         origin: 0.5,
     },
 
+    square: {
+        x: 1293,
+        y: 508,
+        scale: 0.75,
+    },
+
+    squareBG: {
+        x: 1293,
+        y: 507,
+        scale: 0.7,
+    },
+
     electro1: {
-        x: 1100,
+        x: 1159,
         y: 265,
-        origin:0.5,
+        origin: 0.5,
         scale: 0.145,
     },
+
     electro2: {
-        x: 1100,
-        y: 710,
-        origin:0.5,
+        x: 1159,
+        y: 760,
+        origin: 0.5,
         scale: 0.145,
     },
 
     train: {
         x: 1600,
-        y: 800,
+        y: 200,
         scale: 0.5
     },
-
 
     controls: {
         background: {
@@ -64,11 +99,11 @@ export default {
             height: 130
         },
         stats: { x: 33, y: 1015 },
-        spin: { x: 960, y: 990, stopIconSize: 90},
+        spin: { x: 960, y: 990, stopIconSize: 90 },
         controlsContainer: { x: 568, y: 950 },
-        betSelector: { panelOffsetX: -88, panelOffsetY: -347 },
-        bonusBuy: { x: 405, y: 1015 },
-        sideBet: { x: 320, y: 1000 },
+        betSelector: { panelOffsetX: -88, panelOffsetY: -277 },
+        bonusBuy: { x: 435, y: 1015 },
+        sideBet: { x: 320, y: 1000, radius: 34 },
         turbo: { x: 210, y: 1000 },
         controls: { x: 90, y: 985 },
         autoPlay: { x: 1135, y: 978 },
@@ -83,14 +118,55 @@ export default {
             x: 32,
             y: 32
         },
+
         background: {
-            x: 0,
-            y: 0
+            x: 1920 / 2,
+            y: 1080 / 2,
+            origin: 0.5,
+            scale: 0.7
         },
+
+        // Jackpot panel
+        // grand_jackpot: {
+        //     x: 276,
+        //     y: 155,
+        //     origin: 0.5,
+        //     scale: 0.74
+        // },
+
+        // mega_jackpot: {
+        //     x: 276,
+        //     y: 255,
+        //     origin: 0.5,
+        //     scale: 0.74
+        // },
+
+        // major_jackpot: {
+        //     x: 276,
+        //     y: 355,
+        //     origin: 0.5,
+        //     scale: 0.74
+        // },
+
+        // minor_jackpot: {
+        //     x: 276,
+        //     y: 455,
+        //     origin: 0.5,
+        //     scale: 0.74
+        // },
+
+        // mini_jackpot: {
+        //     x: 276,
+        //     y: 555,
+        //     origin: 0.5,
+        //     scale: 0.74
+        // },
+        
         fsLeft: {
             x: 1535,
             y: 510,
         },
+
         version: {
             x: 1860,
             y: 32

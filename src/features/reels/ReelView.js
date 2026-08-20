@@ -24,7 +24,10 @@ export default class ReelView extends Phaser.Events.EventEmitter {
     }
 
     _getResponsiveConfig() {
+        console.log(ResponsiveManager.getForScene(this.scene)?.get('reels') || {});
+        console.log('cuek');
         return ResponsiveManager.getForScene(this.scene)?.get('reels') || {};
+        
     }
 
     getContainer() {

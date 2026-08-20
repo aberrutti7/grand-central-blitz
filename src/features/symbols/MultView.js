@@ -1,5 +1,5 @@
 
-const MULT_ATLAS = 'symbols';
+const MULT_ATLAS = 'mult';
 const FALLBACK_FRAME = 'mult';
 
 
@@ -38,21 +38,21 @@ export default class MultView {
     // -------------------
 
     _createView() {
-        this.view = this.scene.add.sprite(0, 0, MULT_ATLAS, FALLBACK_FRAME);
-        this.view.setScale(0.75);
+        this.view = this.scene.add.sprite(0, 0, MULT_ATLAS, 'mult_'+String(this.id));
+        this.view.setScale(0.70);
 
         this.viewLabel = this.scene.add.text(
-            0,
-            0,
-            `x${this.id}`,
-            {
-                fontFamily: 'Lilita One',
-                fontSize: '80px',
-                color: '#e30a0a',
-                align: 'center',
-                stroke: '#facd17',
-                strokeThickness:10,  
-            }
+            // 0,
+            // 0,
+            // `x${this.id}`,
+            // {
+            //     fontFamily: 'Lilita One',
+            //     fontSize: '80px',
+            //     color: '#e30a0a',
+            //     align: 'center',
+            //     stroke: '#facd17',
+            //     strokeThickness:10,  
+            // }
         ).setOrigin(0.5);
 
         this.container.add([this.view, this.viewLabel]);

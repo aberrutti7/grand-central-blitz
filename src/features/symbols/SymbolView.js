@@ -64,7 +64,7 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
 
         this.initialScale = this.model.getSymbolSize() / this.view.width;
 
-        this.view.scale = this.initialScale
+        this.view.scale = this.initialScale * 0.92
         this.view.x += this.view.displayWidth * 0.5;
         this.view.y += this.view.displayHeight * 0.5;
         this.view.setOrigin(0.5);
@@ -111,10 +111,16 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
     }
 
     changeView(newId){
-        this.view.setFrame(`sym_${newId}_h${this.reelHeight}`);
-        this.debug?.setText(newId)
-        this.id = newId;
-    }
+    this.scene.tweens.killTweensOf(this.view);
+
+    this.view.setFrame(`sym_${newId}_h${this.reelHeight}`);
+
+    this.initialScale = this.model.getSymbolSize() / this.view.width;
+    this.view.setScale(this.initialScale * 0.92);
+    this.view.setPosition(this.view.displayWidth * 0.5, this.view.displayHeight * 0.5);
+
+    this.id = newId;
+}
 
     // -------------------
     // ANIMATIONS
@@ -234,25 +240,25 @@ export default class SymbolView extends Phaser.Events.EventEmitter {
     }
     
     makeWinner() {
-        const border = new Phaser.GameObjects.Sprite(this.scene, 0, 0, 'symbols', 'border');
-        border.x = this.view.displayWidth * 0.5;
-        border.y = this.view.displayHeight * 0.5;
-        this.container.add(border);
+        // const border = new Phaser.GameObjects.Sprite(this.scene, 0, 0, 'symbols', 'border');
+        // border.x = this.view.displayWidth * 0.5;
+        // border.y = this.view.displayHeight * 0.5;
+        // this.container.add(border);
 
-        return new Promise(resolve => {
-            this.scene.tweens.add({
-                targets: border,
-                alpha: { from: 0, to: 1 },
-                duration: 250,
-                ease: 'Sine.InOut',
-                repeat: 3,
-                yoyo: true,
-                onComplete: () => {
-                    resolve();
-                    border.destroy();
-                }
-            });
-        });
+        // return new Promise(resolve => {
+        //     this.scene.tweens.add({
+        //         targets: border,
+        //         alpha: { from: 0, to: 1 },
+        //         duration: 250,
+        //         ease: 'Sine.InOut',
+        //         repeat: 3,
+        //         yoyo: true,
+        //         onComplete: () => {
+        //             resolve();
+        //             border.destroy();
+        //         }
+        //     });
+        // });
     }
 
     stopSpin(){

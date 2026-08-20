@@ -5,6 +5,7 @@ import {
     SpinButton,
     StatsButton,
     TurboButton,
+    SideBetButton,
     ControlsGroup,
     ValuesDisplay,
     BetSelector,
@@ -74,10 +75,8 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
         this.betSelector = new BetSelector({
             scene: this.scene,
             onBetChange: (totalBet) => this.emit('updateTotalBet', totalBet),
-            onSideBetChange: (sideBet) => this._onSideBetFromPanel(sideBet),
             bet: this.model.getBet(),
             availableBets: betValues,
-            sideBets: this.model.getSideBets(),
             config: { ...config.betSelector, isMobile }
         });
 
@@ -99,6 +98,14 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
             scene: this.scene,
             onToggle: (isTurbo) => this.emit('setTurbo', isTurbo),
             config: config.turbo || {}
+        });
+
+        this.sideBetButton = new SideBetButton({
+            scene: this.scene,
+            onToggle: (isSideBet, sideBet) => this._onSideBetToggle(isSideBet, sideBet),
+            sideBets: this.model.getSideBets(),
+            config: config.sideBet || {},
+            isMobile
         });
 
         this.statsButton = new StatsButton({ scene: this.scene, isMobile: this.isMobile });
@@ -159,6 +166,8 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
 
         this.turboButton.getContainer().setPosition(pos('turbo').x, pos('turbo').y);
 
+        this.sideBetButton.getContainer().setPosition(pos('sideBet').x, pos('sideBet').y);
+
         if (this.controlsGroup) setPos('controls', this.controlsGroup.getContainer());
 
         this.forcedPlaySelector.getContainer().setPosition(pos('forcedPlay').x, pos('forcedPlay').y);
@@ -194,6 +203,7 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
             this.spinButton.getSpinContainer(),
             this.bonusBuyPanel.getContainer(),
             this.turboButton.getContainer(),
+            this.sideBetButton.getContainer(),
             this.controlsGroup.getContainer(),
             this.forcedPlaySelector.getContainer(),
             this.autoPlayPanel.getContainer(),
@@ -223,6 +233,7 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
         this.spinButton.getSpinContainer().setVisible(true);
         this.bonusBuyPanel.getContainer().setVisible(true);
         this.turboButton.getContainer().setVisible(true);
+        this.sideBetButton.getContainer().setVisible(this.sideBetButton.hasSideBet);
         this.controlsGroup.getContainer().setVisible(true);
         this.forcedPlaySelector.getContainer().setVisible(true);
         this.autoPlayPanel.getContainer().setVisible(true);
@@ -234,8 +245,9 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
 
     _onSpinClick() {
         this.isSpinning = true;
-        this.emit('startSpin');
         this._disableControls();
+        this.emit('startSpin');
+        
     }
 
     _onStopClick() {
@@ -275,14 +287,6 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
         this.emit('setSideBet', isSideBet, sideBet);
     }
 
-    _onSideBetFromPanel(sideBet) {
-        if (sideBet) {
-            this._onSideBetToggle(true, sideBet);
-        } else {
-            this._onSideBetToggle(false, null);
-        }
-    }
-
     _onAutoPlay(rounds) {
         this.isSpinning = true;
         if (this.autoPlayPanel) {
@@ -299,7 +303,14 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
     }
 
     _onBonusBuy(info) {
+        this._resetSideBet();
         this.emit('bonusBuy', info);
+    }
+
+    _resetSideBet() {
+        if (!this.sideBetButton?.hasSideBet || !this.sideBetButton.sideBet) return;
+        this.sideBetButton.reset();
+        this._onSideBetToggle(false, null);
     }
 
     _disableControls() {
@@ -309,6 +320,7 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
         this.increaseBetButton.disable();
         this.autoPlayPanel.disable();
         this.bonusBuyPanel.disable();
+        this.sideBetButton.disable();
     }
 
     _enableControls() {
@@ -318,6 +330,7 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
         this.increaseBetButton.enable();
         this.autoPlayPanel.enable();
         this.bonusBuyPanel.enable();
+        this.sideBetButton.enable();
     }
 
     updateBalance(value) {
@@ -337,6 +350,7 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
         this.increaseBetButton.disable();
         this.autoPlayPanel.disable();
         this.bonusBuyPanel.disable();
+        this.sideBetButton.disable();
     }
 
     enableControls() {
@@ -350,6 +364,7 @@ export default class UIControlsBar extends Phaser.Events.EventEmitter {
         this.increaseBetButton.enable();
         this.autoPlayPanel.enable();
         this.bonusBuyPanel.enable();
+        this.sideBetButton.enable();
     }
 
     hideSpinButton() {

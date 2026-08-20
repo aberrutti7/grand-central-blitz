@@ -189,7 +189,8 @@ export default class BonusBuyPanel {
         const CARD_HEIGHT = isMobile ? 180 : 530;
         const BUTTON_WIDTH = isMobile ? 280 : 385;
         const BUTTON_HEIGHT = isMobile ? CARD_HEIGHT : 75;
-        const imageSize = isMobile ? 120 : 0;
+        const IMAGE_SCALE = 0.7;
+        const imageSize = isMobile ? 120 * IMAGE_SCALE : 0;
         const imageX = isMobile ? 90 : CARD_WIDTH / 2;
         const imageY = isMobile ? CARD_HEIGHT / 2 : 140;
         const titleX = isMobile ? 200 : CARD_WIDTH / 2;
@@ -261,6 +262,8 @@ export default class BonusBuyPanel {
         const buyImage = this.scene.add.sprite(imageX, imageY, 'symbols', texture);
         if (isMobile) {
             buyImage.setDisplaySize(imageSize, imageSize);
+        } else {
+            buyImage.setScale(IMAGE_SCALE);
         }
 
         const cardContainer = this.scene.add.container(x, y);
