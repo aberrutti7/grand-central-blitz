@@ -30,7 +30,7 @@ export default {
     multiplierBar: {
         orientation: 'vertical',
         x: 400,
-        y: 240,
+        y: 200,
         scale: 1,
         rowWidth: 90,
         rowHeight: 44,

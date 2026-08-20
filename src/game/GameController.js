@@ -1038,7 +1038,6 @@ export default class GameController extends Phaser.Scene {
         return { x: matrix.tx, y: matrix.ty };
     }
 
-    /** El backend manda la verdad en el último paso: se corrige cualquier desvío. */
     _reconcileFSWithBackend(remainingFreeGames){
         if (remainingFreeGames == null) return;
 

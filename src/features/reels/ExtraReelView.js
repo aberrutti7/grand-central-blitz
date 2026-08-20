@@ -2,7 +2,7 @@ import { ResponsiveManager } from "../../core";
 import MultView from "../symbols/MultView";
 
 // POSSIBLE MULTIPLIERS se usa para la strip random
-const POSSIBLE_MULTIPLIERS = [1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
+const POSSIBLE_MULTIPLIERS = [1, 2, 3, 4, 5, 10, 15, 20, 25, 25, 50, 100]; //aded 4, 25, 15*
 
 export default class ExtraReelView {
     constructor({ scene, model, maskKey = 'extraReelMask', maskConfigKey = 'extraReelMask' }) {
@@ -59,7 +59,6 @@ export default class ExtraReelView {
             return;
         }
 
-        // add:false → no entra al display list, pero igual acepta applyResponsive
         this.maskImage = this.scene.make.image({ key: this.maskKey, add: false })
             .applyResponsive(this.maskConfigKey);
 

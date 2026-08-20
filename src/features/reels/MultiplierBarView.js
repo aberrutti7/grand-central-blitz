@@ -1,6 +1,6 @@
 import { ResponsiveManager } from "../../core";
 
-const POSSIBLE_MULTIPLIERS = [1, 2, 3, 5, 10, 20, 50, 100];
+const POSSIBLE_MULTIPLIERS = [1, 2, 3,4, 5, 10,15, 20,25, 50, 100]; //4,15,25
 
 export default class MultiplierBarView {
     constructor({ scene, model, multipliers = POSSIBLE_MULTIPLIERS, responsiveKey = 'multiplierBar' }) {
