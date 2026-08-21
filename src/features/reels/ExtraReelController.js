@@ -63,6 +63,16 @@ export default class ExtraReelController {
         this.multiplierBar?.setBaseMinMultiplier(min);
     }
 
+    async strikeMultipliers(count = 0) {
+        if (count <= 0 || !this.multiplierBar) return;
+
+        await this.updateMinMultiplier(this.multiplierBar.getMinAfterStrikes(count));
+    }
+
+    getCurrentMinMultiplier() {
+        return this.multiplierBar?.getCurrentMin() ?? 1;
+    }
+
     async updateMinMultiplier(min = 1) {
         this.extraReelView.applyMinMultiplier(min);
         await this.multiplierBar?.updateMinMultiplier(min);

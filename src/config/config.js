@@ -55,7 +55,7 @@ export const config = {
         {
             label: 'multi 25',
             spinType: 'fs_multi-25',
-            visibleInForcedPlay: true,
+            visibleInForcedPlay: false,
         },
     ],
     bonusBuy: [
@@ -134,12 +134,12 @@ export const config = {
         showLogo: false,
     },
     api: {
-        //baseUrl: 'https://api.playcasinoslots.xyz/api',
-        baseUrl: 'https://147.15.17.61/api',
+        baseUrl: 'https://api.playcasinoslots.xyz/api',
+        //baseUrl: 'https://147.15.17.61/api',
         username: 'JAK',
         password: 'JAK',
-        secretId: '5b52ccb6-0359-4be4-85da-ca3c94ebb3d2',
-        //secretId: '863fe1bc-afa3-4451-9301-90ccdee6c9e7', //prod
+        //secretId: '5b52ccb6-0359-4be4-85da-ca3c94ebb3d2',
+        secretId: '863fe1bc-afa3-4451-9301-90ccdee6c9e7', //prod
         gameName: 'GrandCentralBlitz',
     }
 }

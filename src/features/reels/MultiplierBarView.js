@@ -139,6 +139,14 @@ export default class MultiplierBarView {
         this.baseMin = Number(min) || 1;
     }
 
+    getMinAfterStrikes(count = 0) {
+        const ascending = [...this.multipliers].sort((a, b) => a - b);
+        const current = ascending.indexOf(this.currentMin);
+        const from = current === -1 ? 0 : current;
+
+        return ascending[Math.min(from + Math.max(0, count), ascending.length - 1)];
+    }
+
     async resetToBase({ animate = true } = {}) {
         await this.updateMinMultiplier(this.baseMin, { animate });
     }

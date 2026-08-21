@@ -4,7 +4,7 @@ import { borderEffect, EFFECTS_MAP, ReelsController, ExtraReelController  } from
 import { UIControlsBar, UIView } from "../ui";
 import GameState from "./GameState";
 import { SLOT_TYPES } from "../constants/slotTypes";
-import { MYSTERY_ID } from "../constants/IDs";
+import { MYSTERY_ID, MULT_COLLECTOR_ID } from "../constants/IDs";
 import {
     PP_SCATTER_ID,
     PP_SCATTER_SYMBOL_ID,
@@ -719,6 +719,7 @@ export default class GameController extends Phaser.Scene {
         this.reelsController.resetReels()
         this.extraReelController.reset()
         this._multiplierBaseSet = false
+        this._collectorsSeen = new Set()
 
         const spinType = isBonusBuy ? 'basegame' : type
         
@@ -878,11 +879,45 @@ export default class GameController extends Phaser.Scene {
     async _updateMultiplierBarForStep() {
         const min = this.lastResult.minMultiplier;
 
-        if (min == null) return;
+        if (min == null) {
+            await this._strikeMultipliersFromReels();
+            return;
+        }
 
         if (!this._multiplierBaseSet) {
             this.extraReelController.setBaseMinMultiplier(min);
             this._multiplierBaseSet = true;
+        }
+
+        this._countNewCollectors();
+
+        await this._reconcileMultiplierBar(min);
+    }
+
+    _countNewCollectors(){
+        if (!this.reelsController) return 0;
+        if (!this._collectorsSeen) this._collectorsSeen = new Set();
+
+        const onBoard = this.reelsController.getSymbolsWorldPositionById(MULT_COLLECTOR_ID);
+        const fresh = onBoard.filter(item => !this._collectorsSeen.has(item.symbol));
+
+        fresh.forEach(item => this._collectorsSeen.add(item.symbol));
+
+        return fresh.length;
+    }
+
+    async _strikeMultipliersFromReels(){
+        const collectors = this._countNewCollectors();
+        if (collectors === 0) return;
+
+        await this.extraReelController.strikeMultipliers(collectors);
+    }
+
+    async _reconcileMultiplierBar(min){
+        const predicted = this.extraReelController.getCurrentMinMultiplier();
+
+        if (predicted !== min && this.model.getDebugMode()){
+            console.warn(`[MultBar] desync -> predicho: ${predicted} | backend: ${min}`);
         }
 
         await this.extraReelController.updateMinMultiplier(min);
