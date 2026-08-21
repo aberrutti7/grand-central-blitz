@@ -7,8 +7,10 @@ export default class SpinResult {
       this.reel2Height = rawSpin.data.reel2Height || 3,
       this.reel3Height = rawSpin.data.reel3Height || 3
     ]
-    this.extraReel = rawSpin.data.extraReel || []
-    this.minMultiplier = rawSpin.data.minMultiplier ?? 1
+    const rawExtraReel = rawSpin.data.extraReel;
+    this.hasExtraReel = Array.isArray(rawExtraReel) && rawExtraReel.length > 0;
+    this.extraReel = rawExtraReel || []
+    this.minMultiplier = rawSpin.data.minMultiplier ?? null
     
     this.moneySymbolValues = rawSpin.data.money_symbols_values || []
 

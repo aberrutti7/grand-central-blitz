@@ -858,23 +858,27 @@ export default class GameController extends Phaser.Scene {
     async handleCascade(){
         await this.reelsController.applyGravityToSymbols();
 
-        await this.reelsController.dropCascadeSymbols({ strip: this.lastResult.reelsSlices });
-        
+        await Promise.all([
+            this.reelsController.dropCascadeSymbols({ strip: this.lastResult.reelsSlices }),
+            this._animateExtraReel() //Siempre
+        ]);
+
         this.reelsController.resetQuickStop()
 
         await this._updateMultiplierBarForStep();
     }
 
     async _animateExtraReel() {
-        
-        await this.extraReelController.spinMultipliersTo(this.lastResult.extraReel, 0); //delay cuarto reeel
-        
-        
+
+        await this.extraReelController.playStep(this.lastResult.extraReel, 0); //delay cuarto reeel
+
         this.controls_bar.disableStopButton();
     }
 
     async _updateMultiplierBarForStep() {
-        const min = this.lastResult.minMultiplier ?? 1;
+        const min = this.lastResult.minMultiplier;
+
+        if (min == null) return;
 
         if (!this._multiplierBaseSet) {
             this.extraReelController.setBaseMinMultiplier(min);
@@ -1055,6 +1059,14 @@ export default class GameController extends Phaser.Scene {
     
     async spinFinished() {
         await this.extraReelController.resetMinMultiplier();
+
+        const bigWin = this.state.evaluateBigWin();
+
+        if (bigWin) {
+            await this.ui.showBigWin(this.state.getTotalWin(), bigWin.type);
+            await this.turboDelay(1000);
+            await this.ui.closeBigWin();
+        }
 
         this.statsPanel.registerWin(this.state.totalWin, this.state.getBet())
         

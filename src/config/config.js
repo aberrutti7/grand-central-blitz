@@ -4,7 +4,7 @@
 export const config = {
     gameName: "Grand Central Blitz",
     slotType: "WAYS",
-    emojiFavicon: "🎰",
+    emojiFavicon: "🚂",
     version: "v0",
     info: false,
     availableBets: [
@@ -50,7 +50,13 @@ export const config = {
             label: 'Single Play',
             spinType: 'file-singlePlay',
             visibleInForcedPlay: false,
-        }
+        },
+
+        {
+            label: 'multi 25',
+            spinType: 'fs_multi-25',
+            visibleInForcedPlay: true,
+        },
     ],
     bonusBuy: [
         {
@@ -117,7 +123,7 @@ export const config = {
         gapBetweenRows: 0,
     },
     symbolSize:150,
-    debug: true,
+    debug: false,
     background: {
         key: 'bg_base',
         path: 'assets/images/ui/backgrounds/new-bg.png',

@@ -190,6 +190,10 @@ export default class GameState {
         return this.bigWin
     }
 
+    evaluateBigWin() {
+        return this._calculateBigWin(this.totalWin / (this.betLevel / this.bet));
+    }
+
     getBalance() {
         return (this.balance / 100).toFixed(2);
     }

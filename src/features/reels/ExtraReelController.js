@@ -28,6 +28,27 @@ export default class ExtraReelController {
         });
     }
 
+    async playStep(extraReel = [], delay = 0) {
+        const hasData = Array.isArray(extraReel) && extraReel.length > 0;
+
+        if (!hasData) {
+            await this.setActive(false);
+            return false;
+        }
+
+        await this.setActive(true, { duration: 150 });
+        await this.spinMultipliersTo(extraReel, delay);
+        return true;
+    }
+
+    async setActive(active, opts) {
+        await this.extraReelView.setDimmed(!active, opts);
+    }
+
+    isActive() {
+        return !this.extraReelView.isDim();
+    }
+
     async spinMultipliersTo(extraReel = [], delay = 0) {
         const spinCount = 5; // vueltas completas antes de frenar
         const steps = this.extraReelView.slots.length * spinCount;

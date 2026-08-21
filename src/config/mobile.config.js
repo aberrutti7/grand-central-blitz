@@ -29,14 +29,14 @@ export default {
 
     multiplierBar: {
         orientation: 'horizontal',
-        x: 218,
+        x: 95,
         y: 530,
         scale: 1,
         rowWidth: 82,
         rowHeight: 60,
         color: '#fede5d',
         strokeColor: '#980000',
-        gap: 8,
+        gap: 5,
         fontSize: 30,
         labelPrefix: 'x',
         strokeThickness: 5,

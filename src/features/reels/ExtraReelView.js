@@ -4,6 +4,11 @@ import MultView from "../symbols/MultView";
 // POSSIBLE MULTIPLIERS se usa para la strip random
 const POSSIBLE_MULTIPLIERS = [1, 2, 3, 4, 5, 10, 15, 20, 25, 25, 50, 100]; //aded 4, 25, 15*
 
+// DIM (cuando el step no trae extraReel)
+const DIM_COLOR = 0x000000;
+const DIM_ALPHA = 0.55;
+const DIM_DURATION = 220;
+
 export default class ExtraReelView {
     constructor({ scene, model, maskKey = 'extraReelMask', maskConfigKey = 'extraReelMask' }) {
         this.scene = scene;
@@ -17,6 +22,9 @@ export default class ExtraReelView {
         this.slotWidth = cfg.slotWidth ?? 195;
         this.slotHeight = cfg.slotHeight ?? 195;
         this.length = 3;
+
+        this.isDimmed = false;
+        this._pendingMin = 1;
 
         this.container = this.scene.add.container(0, 0)
             .setPosition(cfg.x ?? 930, cfg.y ?? 190)
@@ -38,6 +46,7 @@ export default class ExtraReelView {
             this.slots.push(slot);
         }
 
+        this._createDimOverlay(); // despues del strip -> queda por encima de los slots
         this._drawMask();
     }
 
@@ -53,9 +62,22 @@ export default class ExtraReelView {
         return slot;
     }
 
+    //DIM EXTRA REEL
+    _createDimOverlay() {
+        const w = this.slotWidth * 3;
+        const h = this.slotHeight * (this.length + 4);
+        const cy = ((this.length - 1) * this.slotHeight) / 2;
+
+        this.dimOverlay = this.scene.add.rectangle(0, cy, w, h, DIM_COLOR, 1)
+            .setOrigin(0.5)
+            .setAlpha(0);
+
+        this.container.add(this.dimOverlay);
+    }
+
     _drawMask() {
         if (!this.scene.textures.exists(this.maskKey)) {
-            console.warn(`[ExtraReelView] textura "${this.maskKey}" no existe → sin máscara`);
+            console.warn(`[ExtraReelView] textura "${this.maskKey}" no existe -> sin mascara`);
             return;
         }
 
@@ -69,7 +91,7 @@ export default class ExtraReelView {
     }
 
     _drawMaskDebug() {
-        // copia visible del sprite para ver dónde cae el recorte
+        // copia visible del sprite para ver donde cae el recorte
         this.maskDebug = this.scene.add.image(0, 0, this.maskKey)
             .applyResponsive(this.maskConfigKey)
             .setAlpha(0.4)
@@ -78,6 +100,12 @@ export default class ExtraReelView {
     }
 
     destroy() {
+        if (this.dimOverlay) {
+            this.scene.tweens.killTweensOf(this.dimOverlay);
+            this.dimOverlay.destroy();
+            this.dimOverlay = null;
+        }
+
         this.container.clearMask(true);
         this.maskDebug?.destroy();
         this.maskImage?.destroy();
@@ -94,12 +122,47 @@ export default class ExtraReelView {
         return this.slots;
     }
 
+    //extra reel inactivo
+    isDim() {
+        return this.isDimmed;
+    }
+
+    setDimmed(dimmed, { duration = DIM_DURATION } = {}) {
+        if (!this.dimOverlay || this.isDimmed === dimmed) return Promise.resolve();
+
+        this.isDimmed = dimmed;
+        this.scene.tweens.killTweensOf(this.dimOverlay);
+
+        const alpha = dimmed ? DIM_ALPHA : 0;
+
+        if (duration <= 0) {
+            this.dimOverlay.setAlpha(alpha);
+            if (!dimmed) this.applyMinMultiplier(this._pendingMin);
+            return Promise.resolve();
+        }
+
+        return new Promise(resolve => {
+            this.scene.tweens.add({
+                targets: this.dimOverlay,
+                alpha,
+                duration,
+                ease: 'Sine.InOut',
+                onComplete: () => {
+                    if (!dimmed) this.applyMinMultiplier(this._pendingMin);
+                    resolve();
+                },
+            });
+        });
+    }
+
     // -------------------
     // SPIN
     // -------------------
 
     //animacion reel
     async animateSpin({ delay = 0, steps, extraReel }) {
+        if (!Array.isArray(extraReel) || extraReel.length === 0) return;
+
         this._addSlotsAbove(steps, extraReel);
 
         const spinCount = steps / this.length;
@@ -142,7 +205,7 @@ export default class ExtraReelView {
         const newSlots = [];
         for (let i = 0; i < steps; i++) {
             let id;
-            // los últimos slots agregados (los más arriba) son los visibles al final
+            // los ultimos slots agregados (los mas arriba) son los visibles al final
             const isFinalSlot = i >= steps - this.length;
             if (isFinalSlot) {
                 const finalIndex = (steps - 1) - i; // da vuelta el index del extra reel
@@ -182,17 +245,23 @@ export default class ExtraReelView {
 
 
     applyMinMultiplier(min = 1) {
+        this._pendingMin = min;
+
+        if (this.isDimmed) return;
+
         this.slots.forEach(slot => {
             slot.setDimmed(slot.getId() < min);
         });
     }
 
     async pulseSlotWithValue(value) {
+        if (this.isDimmed) return;
         const slot = this.slots.find(s => s.getId() === value);
         if (slot) await slot.pulse();
     }
 
     reset() {
+        this.setDimmed(false, { duration: 0 });
         this.applyMinMultiplier(1);
     }
 }
