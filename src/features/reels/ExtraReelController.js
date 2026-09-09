@@ -36,9 +36,18 @@ export default class ExtraReelController {
             return false;
         }
 
+        await this.extraReelView.setVisible(true);
         await this.setActive(true, { duration: 150 });
         await this.spinMultipliersTo(extraReel, delay);
         return true;
+    }
+
+    addVisibilityTargets(...objects) {
+        this.extraReelView.addVisibilityTargets(...objects);
+    }
+
+    async hide(opts) {
+        await this.extraReelView.setVisible(false, opts);
     }
 
     async setActive(active, opts) {

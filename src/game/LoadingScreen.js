@@ -145,7 +145,8 @@ export default class LoadingScreen extends Phaser.Scene {
         this.load.image('squareExtra', 'assets/images/ui/reels/square.png')
         this.load.image('squareBG',  'assets/images/ui/reels/squareBG.png')
 
-        
+        this.load.image('buttonOn',  'assets/images/ui/reels/buttonOn.png')
+        this.load.image('buttonOff',  'assets/images/ui/reels/buttonOff.png')
     }
 
     loadPP(){

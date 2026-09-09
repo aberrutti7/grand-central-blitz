@@ -107,6 +107,15 @@ export default {
         win: { x: 936, y: 1869 }
     },
 
+    buttonOff: {
+        x: 871,
+        y: 1920/2,
+        scale: 0.4,
+        // scaleX: 1,
+        // scaleY: 1,
+        origin: 0.5,
+    },
+
     ui: {
         gameName: {
             x: 38,

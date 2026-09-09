@@ -32,6 +32,20 @@ const FS_COUNTER_CONFIG = {
     autoActivateOnFreeSpin: false,
 };
 
+const EXTRA_REEL_BUTTON = {
+    floatOffset: 4,
+    floatDuration: 1500,
+    flickerSteps: 7,
+    flickerDelay: 55,
+    flickerAlpha: 0.7,
+    flickerTint: 0xFFE78F,
+    bounceScale: 1.35,
+    bounceInDuration: 120,
+    bounceOutDuration: 340,
+    glowScale: 2.2,
+    glowDuration: 620,
+};
+
 export default class GameController extends Phaser.Scene {
     constructor(){
         super("GameController")
@@ -662,6 +676,16 @@ export default class GameController extends Phaser.Scene {
             scene: this,
             model: this.model,
         })
+
+        this.buttonOn = this.add.image(0,0, 'buttonOff')
+        .applyResponsive('buttonOff')
+
+        this._buttonBaseY = this.buttonOn.y;
+        this._buttonBaseScaleX = this.buttonOn.scaleX;
+        this._buttonBaseScaleY = this.buttonOn.scaleY;
+        this._buttonIsOn = false;
+
+        this._startExtraReelButtonFloat();
         
         this.extraReelFrame = this.add.sprite(0, 0, 'extrareel')
         .applyResponsive('extraReel').setDepth(0);
@@ -680,6 +704,8 @@ export default class GameController extends Phaser.Scene {
 
         this.squareBG= this.add.image(0,0,'squareBG').applyResponsive('squareBG').setDepth(0)
         this.squareExtra = this.add.image(0,0, 'squareExtra').applyResponsive('square').setDepth(2.5)
+
+        this.extraReelController.addVisibilityTargets(this.extraReelFrame, this.squareBG, this.squareExtra)
         
 
         // this.add.image(0, 0, 'grand_jackpot').applyResponsive('ui.grand_jackpot');
@@ -705,6 +731,100 @@ export default class GameController extends Phaser.Scene {
         //     setDepth(2).setOrigin(0.5).setVisible(true).applyResponsive('ui.grand_jackpot_label');
     }
     
+    _startExtraReelButtonFloat(){
+        this.tweens.add({
+            targets: this.buttonOn,
+            y: this._buttonBaseY - EXTRA_REEL_BUTTON.floatOffset,
+            duration: EXTRA_REEL_BUTTON.floatDuration,
+            ease: 'Sine.InOut',
+            yoyo: true,
+            repeat: -1
+        });
+    }
+
+    _setExtraReelButtonOn(on){
+        if (this._buttonIsOn === on) return;
+        this._buttonIsOn = on;
+
+        this._buttonFlicker?.remove();
+        this._buttonBounce?.stop();
+
+        if (!on){
+            this.buttonOn.setTexture('buttonOff')
+                .clearTint()
+                .setAlpha(1)
+                .setScale(this._buttonBaseScaleX, this._buttonBaseScaleY);
+            return;
+        }
+
+        this._flickerExtraReelButton();
+    }
+
+    _flickerExtraReelButton(){
+        let step = 0;
+
+        this._buttonFlicker = this.time.addEvent({
+            delay: EXTRA_REEL_BUTTON.flickerDelay,
+            repeat: EXTRA_REEL_BUTTON.flickerSteps - 1,
+            callback: () => {
+                const lit = step % 2 === 0;
+
+                this.buttonOn
+                    .setTexture(lit ? 'buttonOn' : 'buttonOff')
+                    .setAlpha(lit ? 1 : EXTRA_REEL_BUTTON.flickerAlpha);
+
+                if (lit) this.buttonOn.setTint(EXTRA_REEL_BUTTON.flickerTint);
+                else this.buttonOn.clearTint();
+
+                step++;
+
+                if (step >= EXTRA_REEL_BUTTON.flickerSteps) this._settleExtraReelButton();
+            }
+        });
+    }
+
+    _settleExtraReelButton(){
+        this.buttonOn.setTexture('buttonOn').clearTint().setAlpha(1);
+
+        this._buttonBounce = this.tweens.chain({
+            targets: this.buttonOn,
+            tweens: [
+                {
+                    scaleX: this._buttonBaseScaleX * EXTRA_REEL_BUTTON.bounceScale,
+                    scaleY: this._buttonBaseScaleY * EXTRA_REEL_BUTTON.bounceScale,
+                    duration: EXTRA_REEL_BUTTON.bounceInDuration,
+                    ease: 'Back.Out'
+                },
+                {
+                    scaleX: this._buttonBaseScaleX,
+                    scaleY: this._buttonBaseScaleY,
+                    duration: EXTRA_REEL_BUTTON.bounceOutDuration,
+                    ease: 'Bounce.Out'
+                }
+            ]
+        });
+
+        this._sparkExtraReelButton();
+    }
+
+    _sparkExtraReelButton(){
+        const glow = this.add.image(this.buttonOn.x, this.buttonOn.y, 'buttonOn')
+            .setScale(this._buttonBaseScaleX, this._buttonBaseScaleY)
+            .setDepth(this.buttonOn.depth)
+            .setBlendMode(Phaser.BlendModes.ADD)
+            .setTint(EXTRA_REEL_BUTTON.flickerTint);
+
+        this.tweens.add({
+            targets: glow,
+            scaleX: this._buttonBaseScaleX * EXTRA_REEL_BUTTON.glowScale,
+            scaleY: this._buttonBaseScaleY * EXTRA_REEL_BUTTON.glowScale,
+            alpha: 0,
+            duration: EXTRA_REEL_BUTTON.glowDuration,
+            ease: 'Sine.Out',
+            onComplete: () => glow.destroy()
+        });
+    }
+
     // -------------------
     // SPIN
     // -------------------
@@ -842,16 +962,19 @@ export default class GameController extends Phaser.Scene {
     }
 
     async handleBasespin(){
-        
+        this.extraReelController.hide();
+        this._setExtraReelButtonOn(false);
+
         await this.reelsController.makeSymbolsFallFromScreen()
         await this.reelsController.addNewSymbols({
             strip: this.lastResult.reelsSlices,
             heights: this.lastResult.reelHeights
         })
-        await Promise.all([
-            this.reelsController.showNewSymbols({ steps: this.lastResult.reelsSlices.length * 6 }),
-            this._animateExtraReel() //Siempre
-        ]);
+        await this.reelsController.showNewSymbols({ steps: this.lastResult.reelsSlices.length * 6 });
+
+        this.controls_bar.disableStopButton();
+
+        if (this.lastResult.wonCredits > 0) this._setExtraReelButtonOn(true);
 
         await this._updateMultiplierBarForStep();
     }
@@ -861,7 +984,7 @@ export default class GameController extends Phaser.Scene {
 
         await Promise.all([
             this.reelsController.dropCascadeSymbols({ strip: this.lastResult.reelsSlices }),
-            this._animateExtraReel() //Siempre
+            this._animateExtraReel()
         ]);
 
         this.reelsController.resetQuickStop()
@@ -870,8 +993,7 @@ export default class GameController extends Phaser.Scene {
     }
 
     async _animateExtraReel() {
-
-        await this.extraReelController.playStep(this.lastResult.extraReel, 0); //delay cuarto reeel
+        await this.extraReelController.playStep(this.lastResult.extraReel, 0);
 
         this.controls_bar.disableStopButton();
     }

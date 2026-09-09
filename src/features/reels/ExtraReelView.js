@@ -9,6 +9,9 @@ const DIM_COLOR = 0x000000;
 const DIM_ALPHA = 0.55;
 const DIM_DURATION = 220;
 
+const FADE_DURATION = 200;
+const FADE_OUT_DURATION = 300;
+
 export default class ExtraReelView {
     constructor({ scene, model, maskKey = 'extraReelMask', maskConfigKey = 'extraReelMask' }) {
         this.scene = scene;
@@ -24,12 +27,17 @@ export default class ExtraReelView {
         this.length = 3;
 
         this.isDimmed = false;
+        this.isVisible = false;
         this._pendingMin = 1;
 
         this.container = this.scene.add.container(0, 0)
             .setPosition(cfg.x ?? 930, cfg.y ?? 190)
             .setScale(cfg.scaleX ?? 1, cfg.scaleY ?? 1)
-            .setDepth(1);
+            .setDepth(1)
+            .setAlpha(0)
+            .setVisible(false);
+
+        this._visibilityTargets = [this.container];
 
         this._createView();
     }
@@ -125,6 +133,40 @@ export default class ExtraReelView {
     //extra reel inactivo
     isDim() {
         return this.isDimmed;
+    }
+
+    addVisibilityTargets(...objects) {
+        objects.filter(Boolean).forEach(obj => {
+            obj.setAlpha(this.isVisible ? 1 : 0).setVisible(this.isVisible);
+            this._visibilityTargets.push(obj);
+        });
+    }
+
+    setVisible(visible, { duration = FADE_DURATION } = {}) {
+        if (this.isVisible === visible) return Promise.resolve();
+
+        this.isVisible = visible;
+        this.scene.tweens.killTweensOf(this._visibilityTargets);
+
+        if (duration <= 0) {
+            this._visibilityTargets.forEach(obj => obj.setAlpha(visible ? 1 : 0).setVisible(visible));
+            return Promise.resolve();
+        }
+
+        if (visible) this._visibilityTargets.forEach(obj => obj.setVisible(true));
+
+        return new Promise(resolve => {
+            this.scene.tweens.add({
+                targets: this._visibilityTargets,
+                alpha: visible ? 1 : 0,
+                duration,
+                ease: 'Sine.InOut',
+                onComplete: () => {
+                    this._visibilityTargets.forEach(obj => obj.setVisible(visible));
+                    resolve();
+                },
+            });
+        });
     }
 
     setDimmed(dimmed, { duration = DIM_DURATION } = {}) {
@@ -261,7 +303,11 @@ export default class ExtraReelView {
     }
 
     reset() {
-        this.setDimmed(false, { duration: 0 });
-        this.applyMinMultiplier(1);
+        this.setVisible(false, { duration: FADE_OUT_DURATION }).then(() => {
+            if (this.isVisible) return;
+
+            this.setDimmed(false, { duration: 0 });
+            this.applyMinMultiplier(1);
+        });
     }
 }
