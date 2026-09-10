@@ -62,7 +62,7 @@ export default {
     buttonOff: {
         x: 1293,
         y: 510,
-        scale: 0.35,
+        scale: 0.69,
         // scaleX: 1,
         // scaleY: 1,
         origin: 0.5,

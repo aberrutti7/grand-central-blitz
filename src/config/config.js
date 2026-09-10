@@ -101,6 +101,7 @@ export const config = {
         r1: [1, 1, 8],
         r2: [4, 4, 7],
     },
+    extraReel: [3, 1, 10],
     ///
 // 0
 // : 

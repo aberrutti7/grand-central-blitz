@@ -44,6 +44,10 @@ const EXTRA_REEL_BUTTON = {
     bounceOutDuration: 340,
     glowScale: 2.2,
     glowDuration: 620,
+    holdDuration: 1800,
+    fadeOutDuration: 200,
+    fadeInDuration: 300,
+    depth: 3,
 };
 
 export default class GameController extends Phaser.Scene {
@@ -679,6 +683,7 @@ export default class GameController extends Phaser.Scene {
 
         this.buttonOn = this.add.image(0,0, 'buttonOff')
         .applyResponsive('buttonOff')
+        .setDepth(EXTRA_REEL_BUTTON.depth)
 
         this._buttonBaseY = this.buttonOn.y;
         this._buttonBaseScaleX = this.buttonOn.scaleX;
@@ -705,7 +710,6 @@ export default class GameController extends Phaser.Scene {
         this.squareBG= this.add.image(0,0,'squareBG').applyResponsive('squareBG').setDepth(0)
         this.squareExtra = this.add.image(0,0, 'squareExtra').applyResponsive('square').setDepth(2.5)
 
-        this.extraReelController.addVisibilityTargets(this.extraReelFrame, this.squareBG, this.squareExtra)
         
 
         // this.add.image(0, 0, 'grand_jackpot').applyResponsive('ui.grand_jackpot');
@@ -752,8 +756,9 @@ export default class GameController extends Phaser.Scene {
         if (!on){
             this.buttonOn.setTexture('buttonOff')
                 .clearTint()
-                .setAlpha(1)
                 .setScale(this._buttonBaseScaleX, this._buttonBaseScaleY);
+
+            this._fadeInExtraReelButton();
             return;
         }
 
@@ -800,11 +805,26 @@ export default class GameController extends Phaser.Scene {
                     scaleY: this._buttonBaseScaleY,
                     duration: EXTRA_REEL_BUTTON.bounceOutDuration,
                     ease: 'Bounce.Out'
+                },
+                {
+                    alpha: 0,
+                    delay: EXTRA_REEL_BUTTON.holdDuration,
+                    duration: EXTRA_REEL_BUTTON.fadeOutDuration,
+                    ease: 'Sine.InOut'
                 }
             ]
         });
 
         this._sparkExtraReelButton();
+    }
+
+    _fadeInExtraReelButton(){
+        this.tweens.add({
+            targets: this.buttonOn,
+            alpha: 1,
+            duration: EXTRA_REEL_BUTTON.fadeInDuration,
+            ease: 'Sine.InOut'
+        });
     }
 
     _sparkExtraReelButton(){
@@ -962,7 +982,6 @@ export default class GameController extends Phaser.Scene {
     }
 
     async handleBasespin(){
-        this.extraReelController.hide();
         this._setExtraReelButtonOn(false);
 
         await this.reelsController.makeSymbolsFallFromScreen()

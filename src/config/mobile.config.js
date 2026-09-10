@@ -108,9 +108,9 @@ export default {
     },
 
     buttonOff: {
-        x: 871,
+        x: 873,
         y: 1920/2,
-        scale: 0.4,
+        scale: 0.69,
         // scaleX: 1,
         // scaleY: 1,
         origin: 0.5,

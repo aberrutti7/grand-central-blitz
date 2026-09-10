@@ -31,23 +31,11 @@ export default class ExtraReelController {
     async playStep(extraReel = [], delay = 0) {
         const hasData = Array.isArray(extraReel) && extraReel.length > 0;
 
-        if (!hasData) {
-            await this.setActive(false);
-            return false;
-        }
+        if (!hasData) return false;
 
-        await this.extraReelView.setVisible(true);
         await this.setActive(true, { duration: 150 });
         await this.spinMultipliersTo(extraReel, delay);
         return true;
-    }
-
-    addVisibilityTargets(...objects) {
-        this.extraReelView.addVisibilityTargets(...objects);
-    }
-
-    async hide(opts) {
-        await this.extraReelView.setVisible(false, opts);
     }
 
     async setActive(active, opts) {

@@ -124,6 +124,10 @@ export default class Model extends Phaser.Events.EventEmitter {
     getReels() {
         return this.config.reels;
     }
+
+    getExtraReel() {
+        return this.config.extraReel;
+    }
     
     getReelsY(){
         return this.config.reelsY;
