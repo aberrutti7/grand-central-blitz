@@ -247,13 +247,13 @@ export default class ExtraReelView {
 
 
     applyMinMultiplier(min = 1) {
-        this._pendingMin = min;
+        // this._pendingMin = min;
 
-        if (this.isDimmed) return;
+        // if (this.isDimmed) return;
 
-        this.slots.forEach(slot => {
-            slot.setDimmed(slot.getId() < min);
-        });
+        // this.slots.forEach(slot => {
+        //     slot.setDimmed(slot.getId() < min);
+        // });
     }
 
     async pulseSlotWithValue(value) {
