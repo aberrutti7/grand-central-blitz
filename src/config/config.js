@@ -134,11 +134,14 @@ export const config = {
     },
     api: {
         baseUrl: 'https://api.playcasinoslots.xyz/api',
-        //baseUrl: 'https://147.15.17.61/api',
+        secretId: '863fe1bc-afa3-4451-9301-90ccdee6c9e7', //prod
+        
         username: 'JAK',
         password: 'JAK',
+
+        //baseUrl: 'https://147.15.17.61/api',
         //secretId: '5b52ccb6-0359-4be4-85da-ca3c94ebb3d2',
-        secretId: '863fe1bc-afa3-4451-9301-90ccdee6c9e7', //prod
+        
         gameName: 'GrandCentralBlitz',
     }
 }
